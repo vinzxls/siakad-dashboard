@@ -14,15 +14,7 @@ function Card({ title, right, children }) {
 
 function KpiBig({ title, value, subtitle }) {
   return (
-    <div
-      className="card"
-      style={{
-        padding: 20,
-        borderRadius: 18,
-        display: "grid",
-        gap: 6,
-      }}
-    >
+    <div className="card" style={{ padding: 20, borderRadius: 18, display: "grid", gap: 6 }}>
       <div style={{ fontSize: 14, color: "#6b7280", fontWeight: 700 }}>{title}</div>
       <div style={{ fontSize: 40, fontWeight: 900, lineHeight: 1.05 }}>{value}</div>
       {subtitle ? <div style={{ fontSize: 13, color: "#6b7280" }}>{subtitle}</div> : null}
@@ -51,53 +43,53 @@ function PlaceholderChart({ label }) {
   );
 }
 
-export default function MahasiswaBaru() {
+export default function PenerimaanDashboard({ jalurKey = "snbp", title = "SNBP" }) {
   const [tahun, setTahun] = useState("2024");
-  const [jalur, setJalur] = useState("Semua");
   const [fakultas, setFakultas] = useState("Semua");
 
-  // Dummy data "berelasi" by tahun + jalur + fakultas
   const data = useMemo(() => {
     const baseYear = tahun === "2025" ? 1.06 : tahun === "2024" ? 1 : 0.9;
+    const jalurFactor = jalurKey === "snbp" ? 0.34 : jalurKey === "snbt" ? 0.41 : 0.25;
+    const FAC_WEIGHT = {Semua: 1,Hukum: 0.22,Teknik: 0.28,Ekonomi: 0.24,FISIP: 0.18,Kedokteran: 0.08};
+    const facFactor = FAC_WEIGHT[fakultas] ?? 0.2;
 
-    const jalurFactor =
-      jalur === "Semua" ? 1 : jalur === "SNBP" ? 0.34 : jalur === "SNBT" ? 0.41 : 0.25;
+    const pendaftar = Math.round(12500 * baseYear * jalurFactor * facFactor);
+    const diterima = Math.round(pendaftar * 0.52);
+    const registrasi = Math.round(diterima * 0.82);
+    const tidakRegistrasi = Math.max(0, diterima - registrasi);
 
-    const facFactor = fakultas === "Semua" ? 1 : 0.38;
-
-    const total = Math.round(5200 * baseYear * jalurFactor * (fakultas === "Semua" ? 1 : 0.55));
-    const registrasi = Math.round(total * 0.9);
-    const belumRegistrasi = Math.max(0, total - registrasi);
-
-    const laki = Math.round(total * 0.5);
-    const perempuan = total - laki;
-
-    const asal = [
-      { label: "Maluku", value: Math.round(total * 0.62) },
-      { label: "Papua", value: Math.round(total * 0.14) },
-      { label: "Sulawesi", value: Math.round(total * 0.12) },
-      { label: "Jawa", value: Math.round(total * 0.08) },
-      { label: "Lainnya", value: Math.max(0, total - Math.round(total * 0.62) - Math.round(total * 0.14) - Math.round(total * 0.12) - Math.round(total * 0.08)) },
-    ];
+    const gender = {
+      laki: Math.round(registrasi * 0.48),
+      perempuan: registrasi - Math.round(registrasi * 0.48),
+    };
 
     const topProdi = [
-      ["Teknik Informatika", Math.round(520 * baseYear * jalurFactor * facFactor)],
-      ["Manajemen", Math.round(460 * baseYear * jalurFactor * facFactor)],
-      ["Hukum", Math.round(420 * baseYear * jalurFactor * facFactor)],
-      ["Kedokteran", Math.round(380 * baseYear * jalurFactor * facFactor)],
-      ["Ilmu Komunikasi", Math.round(340 * baseYear * jalurFactor * facFactor)],
-    ].map(([prodi, val]) => ({ prodi, val: Math.max(40, val) }));
+      ["Teknik Informatika", Math.round(320 * baseYear * facFactor)],
+      ["Manajemen", Math.round(290 * baseYear * facFactor)],
+      ["Hukum", Math.round(260 * baseYear * facFactor)],
+      ["Kedokteran", Math.round(240 * baseYear * facFactor)],
+      ["Ilmu Komunikasi", Math.round(220 * baseYear * facFactor)],
+      ["Akuntansi", Math.round(200 * baseYear * facFactor)],
+    ].map(([prodi, val]) => ({ prodi, val: Math.max(30, val) }));
+
+    const asalSekolah = [
+      ["SMA Negeri 1 Ambon", Math.round(90 * baseYear * facFactor)],
+      ["SMA Negeri 2 Ambon", Math.round(82 * baseYear * facFactor)],
+      ["SMA Kristen 1", Math.round(75 * baseYear * facFactor)],
+      ["SMA Negeri 3 Ambon", Math.round(70 * baseYear * facFactor)],
+      ["SMK Negeri 1", Math.round(62 * baseYear * facFactor)],
+    ].map(([s, val]) => ({ sekolah: s, val: Math.max(10, val) }));
 
     return {
-      total,
+      pendaftar,
+      diterima,
       registrasi,
-      belumRegistrasi,
-      laki,
-      perempuan,
-      asal,
+      tidakRegistrasi,
+      gender,
       topProdi,
+      asalSekolah,
     };
-  }, [tahun, jalur, fakultas]);
+  }, [tahun, fakultas, jalurKey]);
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
@@ -113,9 +105,9 @@ export default function MahasiswaBaru() {
         }}
       >
         <div style={{ display: "grid", gap: 4 }}>
-          <div style={{ fontSize: 20, fontWeight: 900 }}>Mahasiswa Baru</div>
+          <div style={{ fontSize: 20, fontWeight: 900 }}>{title}</div>
           <div style={{ fontSize: 13, color: "#6b7280" }}>
-            Ringkasan mahasiswa baru berdasarkan tahun, jalur, dan fakultas (dummy).
+            Statistik penerimaan jalur {title} berdasarkan tahun & fakultas (dummy).
           </div>
         </div>
 
@@ -138,28 +130,6 @@ export default function MahasiswaBaru() {
               <option value="2025">2025</option>
               <option value="2024">2024</option>
               <option value="2023">2023</option>
-            </select>
-          </label>
-
-          <label style={{ fontSize: 13, color: "#6b7280", fontWeight: 700 }}>
-            Jalur
-            <select
-              value={jalur}
-              onChange={(e) => setJalur(e.target.value)}
-              style={{
-                marginLeft: 10,
-                padding: "10px 12px",
-                borderRadius: 12,
-                border: "1px solid #e5e7eb",
-                background: "#fff",
-                fontSize: 15,
-                fontWeight: 800,
-              }}
-            >
-              <option value="Semua">Semua</option>
-              <option value="SNBP">SNBP</option>
-              <option value="SNBT">SNBT</option>
-              <option value="Mandiri">Mandiri</option>
             </select>
           </label>
 
@@ -190,44 +160,26 @@ export default function MahasiswaBaru() {
       </div>
 
       {/* MAIN GRID */}
-      <div
-        style={{
-          display: "grid",
-          gap: 16,
-          gridTemplateColumns: "1.6fr 0.9fr",
-          alignItems: "start",
-        }}
-      >
+      <div style={{ display: "grid", gap: 16, gridTemplateColumns: "1.6fr 0.9fr", alignItems: "start" }}>
         {/* LEFT */}
         <div style={{ display: "grid", gap: 16 }}>
           <div style={{ display: "grid", gap: 16, gridTemplateColumns: "1fr 1fr" }}>
-            <Card title="Sebaran Mahasiswa Baru Berdasarkan Asal Wilayah">
-              <PlaceholderChart label="Donut/Bar Asal Wilayah" />
-              <div style={{ display: "grid", gap: 8 }}>
-                {data.asal.map((x) => (
-                  <div
-                    key={x.label}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      borderTop: "1px solid #f1f5f9",
-                      paddingTop: 10,
-                      fontSize: 14,
-                    }}
-                  >
-                    <div style={{ fontWeight: 800 }}>{x.label}</div>
-                    <div style={{ fontWeight: 900 }}>{x.value.toLocaleString("id-ID")}</div>
-                  </div>
-                ))}
+            <Card title="Pendaftar vs Diterima">
+              <PlaceholderChart label="Bar/Line Pendaftar vs Diterima" />
+              <div style={{ fontSize: 13, color: "#6b7280" }}>
+                Rasio diterima:{" "}
+                <b style={{ color: "#111827" }}>
+                  {Math.round((data.diterima / Math.max(1, data.pendaftar)) * 100)}%
+                </b>
               </div>
             </Card>
 
-            <Card title="Mahasiswa Baru Berdasarkan Jenis Kelamin">
-              <PlaceholderChart label="Donut Gender" />
+            <Card title="Registrasi vs Tidak Registrasi">
+              <PlaceholderChart label="Donut Registrasi" />
               <div style={{ display: "grid", gap: 10 }}>
                 {[
-                  ["Laki-laki", data.laki],
-                  ["Perempuan", data.perempuan],
+                  ["Registrasi", data.registrasi],
+                  ["Tidak Registrasi", data.tidakRegistrasi],
                 ].map(([k, v]) => (
                   <div
                     key={k}
@@ -247,7 +199,57 @@ export default function MahasiswaBaru() {
             </Card>
           </div>
 
-          <Card title="Top Program Studi (Peminat / Pendaftar / Maba)">
+          <div style={{ display: "grid", gap: 16, gridTemplateColumns: "1fr 1fr" }}>
+            <Card title="Mahasiswa Registrasi Berdasarkan Gender">
+              <PlaceholderChart label="Donut Gender" />
+              <div style={{ display: "grid", gap: 10 }}>
+                {[
+                  ["Laki-laki", data.gender.laki],
+                  ["Perempuan", data.gender.perempuan],
+                ].map(([k, v]) => (
+                  <div
+                    key={k}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      borderTop: "1px solid #f1f5f9",
+                      paddingTop: 10,
+                      fontSize: 14,
+                    }}
+                  >
+                    <div style={{ fontWeight: 800 }}>{k}</div>
+                    <div style={{ fontWeight: 900 }}>{v.toLocaleString("id-ID")}</div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            <Card title="Top Asal Sekolah (Registrasi)">
+              <PlaceholderChart label="Bar Top Sekolah" />
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+                <thead>
+                  <tr style={{ textAlign: "left", color: "#6b7280" }}>
+                    <th style={{ padding: "10px 0" }}>Sekolah</th>
+                    <th style={{ padding: "10px 0" }}>Jumlah</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.asalSekolah.map((r) => (
+                    <tr key={r.sekolah}>
+                      <td style={{ padding: "10px 0", borderTop: "1px solid #f1f5f9", fontWeight: 800 }}>
+                        {r.sekolah}
+                      </td>
+                      <td style={{ padding: "10px 0", borderTop: "1px solid #f1f5f9", fontWeight: 900 }}>
+                        {r.val.toLocaleString("id-ID")}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </Card>
+          </div>
+
+          <Card title="Top Program Studi (Diterima/Registrasi)">
             <PlaceholderChart label="Bar Top Prodi" />
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
               <thead>
@@ -274,35 +276,20 @@ export default function MahasiswaBaru() {
 
         {/* RIGHT KPI */}
         <div style={{ display: "grid", gap: 16 }}>
-          <KpiBig
-            title="Total Mahasiswa Baru"
-            value={data.total.toLocaleString("id-ID")}
-            subtitle={`Tahun ${tahun} • Jalur ${jalur} • Fakultas ${fakultas}`}
-          />
-          <KpiBig
-            title="Registrasi"
-            value={data.registrasi.toLocaleString("id-ID")}
-            subtitle={`~${Math.round((data.registrasi / Math.max(1, data.total)) * 100)}% dari total`}
-          />
-          <KpiBig
-            title="Belum Registrasi"
-            value={data.belumRegistrasi.toLocaleString("id-ID")}
-            subtitle="Butuh follow-up"
-          />
+          <KpiBig title="Total Pendaftar" value={data.pendaftar.toLocaleString("id-ID")} subtitle={`Tahun ${tahun} • Fakultas ${fakultas}`} />
+          <KpiBig title="Total Diterima" value={data.diterima.toLocaleString("id-ID")} subtitle={`Rasio: ${Math.round((data.diterima / Math.max(1, data.pendaftar)) * 100)}%`} />
+          <KpiBig title="Registrasi" value={data.registrasi.toLocaleString("id-ID")} subtitle={`Dari diterima: ${Math.round((data.registrasi / Math.max(1, data.diterima)) * 100)}%`} />
+          <KpiBig title="Tidak Registrasi" value={data.tidakRegistrasi.toLocaleString("id-ID")} subtitle="Perlu monitoring" />
 
           <div className="card" style={{ borderRadius: 18 }}>
             <div style={{ fontWeight: 900, fontSize: 16, marginBottom: 10 }}>Catatan</div>
             <ul style={{ margin: 0, paddingLeft: 18, color: "#6b7280", display: "grid", gap: 8 }}>
               <li>Chart masih placeholder (Step chart berikutnya).</li>
-              <li>Filter Tahun/Jalur/Fakultas sudah mempengaruhi KPI & tabel.</li>
-              <li>Nanti tinggal ganti data dummy jadi API.</li>
+              <li>Filter Tahun/Fakultas mempengaruhi KPI & tabel.</li>
+              <li>Engine ini dipakai SNBP/SNBT/Mandiri.</li>
             </ul>
           </div>
         </div>
-      </div>
-
-      <div style={{ fontSize: 12, color: "#6b7280" }}>
-        *Layout dibuat besar untuk dashboard. Nanti kita buat versi responsive jika diperlukan.
       </div>
     </div>
   );

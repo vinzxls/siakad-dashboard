@@ -1,5 +1,4 @@
-import PenerimaanPage from "../components/PenerimaanPage";
-
+import PenerimaanDashboard from "../components/PenerimaanDashboard";
 export default function SNBT() {
-  return <PenerimaanPage jalurKey="snbt" title="SNBT" />;
+  return <PenerimaanDashboard jalurKey="snbt" title="SNBT" />;
 }

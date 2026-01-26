@@ -1,0 +1,255 @@
+:root{
+  --unpatti-blue:#1e5aa8;
+  --unpatti-blue-dark:#0f3f86;
+  --unpatti-bg:#eef2f7;
+  --unpatti-border:#e5e7eb;
+  --unpatti-text:#111827;
+  --unpatti-muted:#6b7280;
+  --card:#ffffff;
+}
+
+/* base */
+*{ box-sizing:border-box; }
+html, body, #root{ height:100%; }
+body{
+  margin:0;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background:var(--unpatti-bg);
+  color:var(--unpatti-text);
+}
+a{ color:inherit; }
+
+/* layout */
+.unpatti-app{
+  display:grid;
+  grid-template-columns: 260px 1fr;
+  min-height:100vh;
+}
+.unpatti-content{
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+}
+.unpatti-main{
+  padding:16px;
+  overflow:auto;
+  min-height:0;
+}
+
+/* topbar */
+.unpatti-topbar{
+  background:var(--unpatti-blue);
+  color:#fff;
+  padding:12px 18px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  box-shadow:0 2px 10px rgba(0,0,0,0.12);
+}
+.unpatti-topbar .brand{
+  display:flex;
+  flex-direction:column;
+  line-height:1.05;
+}
+.unpatti-topbar .brand b{ font-size:18px; letter-spacing:0.4px; }
+.unpatti-topbar .brand span{ font-size:12px; opacity:0.9; }
+
+.unpatti-breadcrumb{
+  background:var(--unpatti-blue);
+  color:#eaf2ff;
+  padding:8px 18px;
+  font-size:13px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.unpatti-breadcrumb .title{
+  font-weight:900;
+  font-size:20px;
+  text-transform:uppercase;
+  letter-spacing:0.6px;
+  color:#fff;
+}
+
+/* sidebar */
+.unpatti-sidebar{
+  background:#fff;
+  border-right:1px solid var(--unpatti-border);
+  display:flex;
+  flex-direction:column;
+  min-height:100vh;
+}
+
+.unpatti-logoBox{
+  background:var(--unpatti-blue);
+  padding:12px;
+}
+.unpatti-logoInner{
+  background:var(--unpatti-blue-dark);
+  border-radius:12px;
+  padding:10px 12px;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.unpatti-logoInner img{
+  width:56px;
+  height:56px;
+  object-fit:contain;
+  background:#ffffff;
+  border-radius:10px;
+  padding:6px;
+}
+.unpatti-logoInner .text{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.unpatti-logoInner .text b{ font-size:12px; letter-spacing:0.4px; }
+.unpatti-logoInner .text span{ font-size:11px; opacity:0.9; }
+
+/* menu items */
+.unpatti-menu{
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+.unpatti-item,
+.unpatti-toggle{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 12px;
+  border-radius:10px;
+  text-decoration:none;
+  border:none;
+  background:transparent;
+  cursor:pointer;
+  color:#374151;
+  font-size:14px;
+}
+
+.unpatti-item:hover,
+.unpatti-toggle:hover{
+  background:#f3f4f6;
+}
+
+.unpatti-item.active{
+  background:#eaf2ff;
+  color:#1d4ed8;
+  font-weight:800;
+}
+
+.unpatti-sub{
+  padding-left:18px;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.unpatti-footer{
+  margin-top:auto;
+  padding:12px;
+  font-size:11px;
+  color:#6b7280;
+  text-align:center;
+  border-top:1px solid var(--unpatti-border);
+}
+
+/* cards (optional helper) */
+.card{
+  background:var(--card);
+  border:1px solid var(--unpatti-border);
+  border-radius:14px;
+  padding:16px;
+}
+
+/* =========================
+   XL DASHBOARD MODE
+   ========================= */
+
+body{
+  font-size: 18px; /* naik lagi */
+}
+
+/* Layout overall lebih lega */
+.unpatti-app{
+  grid-template-columns: 320px 1fr; /* sidebar makin lebar */
+}
+
+/* Topbar super besar */
+.unpatti-topbar{
+  padding: 20px 28px;
+  min-height: 84px;
+}
+.unpatti-topbar .brand b{
+  font-size: 24px;
+}
+.unpatti-topbar .brand span{
+  font-size: 14px;
+}
+
+/* Breadcrumb + Title besar */
+.unpatti-breadcrumb{
+  padding: 14px 28px;
+  font-size: 15px;
+}
+.unpatti-breadcrumb .title{
+  font-size: 28px;
+}
+
+/* Main content padding besar */
+.unpatti-main{
+  padding: 28px;
+}
+
+/* Sidebar menu item besar */
+.unpatti-menu{
+  padding: 14px;
+  gap: 8px;
+}
+.unpatti-item,
+.unpatti-toggle{
+  padding: 14px 16px;
+  font-size: 16px;
+  border-radius: 14px;
+}
+
+/* Logo area lebih tinggi */
+.unpatti-logoBox{
+  padding: 14px;
+}
+.unpatti-logoInner{
+  padding: 14px;
+  border-radius: 14px;
+}
+.unpatti-logoInner img{
+  width: 64px;
+  height: 64px;
+}
+
+/* Submenu lebih nyaman */
+.unpatti-sub{
+  padding-left: 26px;
+  gap: 6px;
+}
+
+/* Card lebih besar */
+.card{
+  padding: 22px;
+  border-radius: 18px;
+}
+
+/* KPI (kalau kamu pakai class ini di KpiCard) */
+.kpi-title{
+  font-size: 15px;
+}
+.kpi-value{
+  font-size: 38px;
+  font-weight: 900;
+}
+
