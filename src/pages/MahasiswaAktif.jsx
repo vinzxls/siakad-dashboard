@@ -1,12 +1,32 @@
 import { useMemo, useState } from "react";
-import {ResponsiveContainer,PieChart,Pie,Cell,Tooltip,BarChart,Bar,XAxis,YAxis,CartesianGrid,LineChart,ine,} from "recharts";
+import {
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  LineChart,
+  Line,
+} from "recharts";
 
 const COLORS = ["#1e5aa8", "#60a5fa", "#93c5fd", "#bfdbfe"];
 
 function Card({ title, right, children }) {
   return (
     <section className="card" style={{ display: "grid", gap: 12 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: 12,
+          alignItems: "center",
+        }}
+      >
         <div style={{ fontWeight: 900, fontSize: 18 }}>{title}</div>
         {right ? <div>{right}</div> : null}
       </div>
@@ -26,30 +46,116 @@ function KpiBig({ title, value, subtitle }) {
         gap: 6,
       }}
     >
-      <div style={{ fontSize: 14, color: "#6b7280", fontWeight: 700 }}>{title}</div>
-      <div style={{ fontSize: 40, fontWeight: 900, lineHeight: 1.05 }}>{value}</div>
-      {subtitle ? <div style={{ fontSize: 13, color: "#6b7280" }}>{subtitle}</div> : null}
+      <div style={{ fontSize: 14, color: "#6b7280", fontWeight: 800 }}>
+        {title}
+      </div>
+      <div style={{ fontSize: 40, fontWeight: 900, lineHeight: 1.05 }}>
+        {value}
+      </div>
+      {subtitle ? (
+        <div style={{ fontSize: 13, color: "#6b7280" }}>{subtitle}</div>
+      ) : null}
     </div>
   );
 }
 
-function PlaceholderChart({ label }) {
+function DonutJenjang({ data }) {
   return (
-    <div
-      style={{
-        height: 320,
-        border: "2px dashed #cbd5e1",
-        borderRadius: 16,
-        display: "grid",
-        placeItems: "center",
-        color: "#6b7280",
-        fontSize: 14,
-        fontWeight: 800,
-        letterSpacing: 0.4,
-        background: "#fafafa",
-      }}
-    >
-      {label} (Chart – Step berikutnya)
+    <div style={{ height: 320 }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie
+            data={data}
+            dataKey="value"
+            nameKey="label"
+            innerRadius={80}
+            outerRadius={120}
+            paddingAngle={2}
+          >
+            {data.map((_, i) => (
+              <Cell key={i} fill={COLORS[i % COLORS.length]} />
+            ))}
+          </Pie>
+          <Tooltip />
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function SmartXAxisTick({ x, y, payload }) {
+  const raw = String(payload?.value ?? "");
+
+  // wrap jadi max 2 baris, masing-masing max 12 karakter
+  const words = raw.split(" ");
+  const lines = [];
+  let line = "";
+
+  for (const w of words) {
+    const next = line ? `${line} ${w}` : w;
+    if (next.length <= 12) {
+      line = next;
+    } else {
+      if (line) lines.push(line);
+      line = w;
+    }
+    if (lines.length === 2) break;
+  }
+  if (lines.length < 2 && line) lines.push(line);
+
+  // kalau masih terlalu panjang, potong baris ke-2
+  if (lines[1] && lines[1].length > 12) lines[1] = lines[1].slice(0, 11) + "…";
+  // kalau label 1 kata panjang banget, potong baris 1
+  if (!lines[1] && lines[0] && lines[0].length > 12) lines[0] = lines[0].slice(0, 11) + "…";
+
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text x={0} y={0} dy={12} textAnchor="middle" style={{ fontSize: 12, fill: "#111827" }}>
+        {lines.map((t, i) => (
+          <tspan key={i} x="0" dy={i === 0 ? 0 : 14}>
+            {t}
+          </tspan>
+        ))}
+      </text>
+    </g>
+  );
+}
+
+
+function BarAngkatan({ data }) {
+  return (
+    <div style={{ height: 320 }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <SmartXAxisTick dataKey="angkatan" />
+          <YAxis />
+          <Tooltip />
+          <Bar dataKey="value" fill="#1e5aa8" radius={[10, 10, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function LineTren({ data }) {
+  return (
+    <div style={{ height: 320 }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <SmartXAxisTick dataKey="label" />
+          <YAxis />
+          <Tooltip />
+          <Line
+            type="monotone"
+            dataKey="value"
+            stroke="#1e5aa8"
+            strokeWidth={3}
+            dot={false}
+          />
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   );
 }
@@ -58,14 +164,24 @@ export default function MahasiswaAktif() {
   const [tahun, setTahun] = useState("2024");
   const [fakultas, setFakultas] = useState("Semua");
 
-  // Dummy yang "berasa warehouse": berubah by tahun & fakultas (biar tidak statis)
   const data = useMemo(() => {
     const baseYear = tahun === "2025" ? 1.05 : tahun === "2024" ? 1 : 0.92;
-    const facFactor = fakultas === "Semua" ? 1 : 0.35;
 
-    const totalAktif = Math.round(18200 * baseYear * (fakultas === "Semua" ? 1 : 0.42));
+    // Biar beda per fakultas (bukan sekadar semua vs bukan semua)
+    const FAC_WEIGHT = {
+      Semua: 1,
+      Hukum: 0.22,
+      Teknik: 0.28,
+      Ekonomi: 0.24,
+      FISIP: 0.18,
+      Kedokteran: 0.08,
+    };
+    const facFactor = FAC_WEIGHT[fakultas] ?? 0.2;
+
+    const totalAktif = Math.round(18200 * baseYear * facFactor);
+
     const isiKrs = Math.round(totalAktif * 0.78);
-    const belumKrs = totalAktif - isiKrs;
+    const belumKrs = Math.max(0, totalAktif - isiKrs);
 
     const byJenjang = [
       { label: "D3", value: Math.round(totalAktif * 0.08) },
@@ -74,10 +190,23 @@ export default function MahasiswaAktif() {
       { label: "S3", value: Math.round(totalAktif * 0.02) },
     ];
 
-    const angkatan = ["2019", "2020", "2021", "2022", "2023", "2024"].map((a, i) => ({
-      angkatan: a,
-      value: Math.max(120, Math.round((2800 - i * 320) * baseYear * (0.8 + facFactor))),
-    }));
+    const angkatan = ["2019", "2020", "2021", "2022", "2023", "2024"].map(
+      (a, i) => ({
+        angkatan: a,
+        value: Math.max(
+          80,
+          Math.round((2600 - i * 300) * baseYear * (0.65 + facFactor))
+        ),
+      })
+    );
+
+    const tren = [
+      { label: "2021", value: Math.round(17000 * 0.92 * facFactor) },
+      { label: "2022", value: Math.round(17600 * 0.96 * facFactor) },
+      { label: "2023", value: Math.round(18000 * 1.0 * facFactor) },
+      { label: "2024", value: Math.round(18200 * 1.02 * facFactor) },
+      { label: "2025", value: Math.round(18600 * 1.05 * facFactor) },
+    ];
 
     const ipk = {
       rata: (3.18 + (tahun === "2025" ? 0.03 : tahun === "2023" ? -0.02 : 0)).toFixed(2),
@@ -88,17 +217,19 @@ export default function MahasiswaAktif() {
     };
 
     const transfer = {
-      total: Math.round(180 * baseYear * (fakultas === "Semua" ? 1 : 0.6)),
+      total: Math.round(180 * baseYear * (fakultas === "Semua" ? 1 : 0.55)),
       masuk: Math.round(120 * baseYear),
       keluar: Math.round(60 * baseYear),
     };
 
     return {
+      facFactor,
       totalAktif,
       isiKrs,
       belumKrs,
       byJenjang,
       angkatan,
+      tren,
       ipk,
       transfer,
     };
@@ -106,7 +237,7 @@ export default function MahasiswaAktif() {
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
-      {/* Filter Bar (besar, dashboard feel) */}
+      {/* Filter Bar */}
       <div
         className="card"
         style={{
@@ -120,12 +251,19 @@ export default function MahasiswaAktif() {
         <div style={{ display: "grid", gap: 4 }}>
           <div style={{ fontSize: 20, fontWeight: 900 }}>Mahasiswa Aktif</div>
           <div style={{ fontSize: 13, color: "#6b7280" }}>
-            Statistik mahasiswa aktif berdasarkan tahun & fakultas (dummy terpusat).
+            Statistik mahasiswa aktif berdasarkan tahun & fakultas.
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
-          <label style={{ fontSize: 13, color: "#6b7280", fontWeight: 700 }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 12,
+            flexWrap: "wrap",
+            alignItems: "center",
+          }}
+        >
+          <label style={{ fontSize: 13, color: "#6b7280", fontWeight: 800 }}>
             Tahun
             <select
               value={tahun}
@@ -146,7 +284,7 @@ export default function MahasiswaAktif() {
             </select>
           </label>
 
-          <label style={{ fontSize: 13, color: "#6b7280", fontWeight: 700 }}>
+          <label style={{ fontSize: 13, color: "#6b7280", fontWeight: 800 }}>
             Fakultas
             <select
               value={fakultas}
@@ -166,12 +304,13 @@ export default function MahasiswaAktif() {
               <option value="Teknik">Teknik</option>
               <option value="Ekonomi">Ekonomi</option>
               <option value="FISIP">FISIP</option>
+              <option value="Kedokteran">Kedokteran</option>
             </select>
           </label>
         </div>
       </div>
 
-      {/* MAIN GRID: kiri charts, kanan KPI */}
+      {/* MAIN GRID */}
       <div
         style={{
           display: "grid",
@@ -180,18 +319,11 @@ export default function MahasiswaAktif() {
           alignItems: "start",
         }}
       >
-        {/* LEFT: Charts & Tables */}
+        {/* LEFT */}
         <div style={{ display: "grid", gap: 16 }}>
-          {/* Row 1: Jenjang + Angkatan */}
-          <div
-            style={{
-              display: "grid",
-              gap: 16,
-              gridTemplateColumns: "1fr 1fr",
-            }}
-          >
+          <div style={{ display: "grid", gap: 16, gridTemplateColumns: "1fr 1fr" }}>
             <Card title="Mahasiswa Aktif Berdasarkan Jenjang">
-              <PlaceholderChart label="Donut Jenjang (D3/S1/S2/S3)" />
+              <DonutJenjang data={data.byJenjang} />
               <div style={{ display: "grid", gap: 8 }}>
                 {data.byJenjang.map((x) => (
                   <div
@@ -204,7 +336,7 @@ export default function MahasiswaAktif() {
                       fontSize: 14,
                     }}
                   >
-                    <div style={{ fontWeight: 800 }}>{x.label}</div>
+                    <div style={{ fontWeight: 900 }}>{x.label}</div>
                     <div style={{ fontWeight: 900 }}>{x.value.toLocaleString("id-ID")}</div>
                   </div>
                 ))}
@@ -212,29 +344,26 @@ export default function MahasiswaAktif() {
             </Card>
 
             <Card title="Mahasiswa Aktif Berdasarkan Angkatan">
-              <PlaceholderChart label="Bar Angkatan" />
+              <BarAngkatan data={data.angkatan} />
               <div style={{ fontSize: 13, color: "#6b7280" }}>
-                Top angkatan (dummy):{" "}
-                <b style={{ color: "#111827" }}>{data.angkatan[0].angkatan}</b> –{" "}
-                {data.angkatan[0].value.toLocaleString("id-ID")}
+                Angkatan teratas:{" "}
+                <b style={{ color: "#111827" }}>
+                  {data.angkatan[0].angkatan}
+                </b>{" "}
+                ({data.angkatan[0].value.toLocaleString("id-ID")})
               </div>
             </Card>
           </div>
 
-          {/* Row 2: Tren */}
           <Card title="Tren Mahasiswa Aktif">
-            <PlaceholderChart label="Line Tren (per tahun/per semester)" />
+            <LineTren data={data.tren} />
           </Card>
 
-          {/* Row 3: IPK + Transfer */}
-          <div
-            style={{
-              display: "grid",
-              gap: 16,
-              gridTemplateColumns: "1fr 1fr",
-            }}
-          >
-            <Card title="IPK Mahasiswa Aktif" right={<span style={{ fontWeight: 900 }}>Rata-rata: {data.ipk.rata}</span>}>
+          <div style={{ display: "grid", gap: 16, gridTemplateColumns: "1fr 1fr" }}>
+            <Card
+              title="IPK Mahasiswa Aktif"
+              right={<span style={{ fontWeight: 900 }}>Rata-rata: {data.ipk.rata}</span>}
+            >
               <div style={{ display: "grid", gap: 10 }}>
                 {[
                   ["IPK < 2.00", data.ipk.lt2],
@@ -252,7 +381,7 @@ export default function MahasiswaAktif() {
                       fontSize: 14,
                     }}
                   >
-                    <div style={{ fontWeight: 800 }}>{k}</div>
+                    <div style={{ fontWeight: 900 }}>{k}</div>
                     <div style={{ fontWeight: 900 }}>{v.toLocaleString("id-ID")}</div>
                   </div>
                 ))}
@@ -262,22 +391,33 @@ export default function MahasiswaAktif() {
             <Card title="Mahasiswa Transfer">
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <div className="card" style={{ padding: 16, borderRadius: 16 }}>
-                  <div style={{ color: "#6b7280", fontSize: 13, fontWeight: 800 }}>Transfer Masuk</div>
-                  <div style={{ fontSize: 28, fontWeight: 900 }}>{data.transfer.masuk.toLocaleString("id-ID")}</div>
+                  <div style={{ color: "#6b7280", fontSize: 13, fontWeight: 900 }}>
+                    Transfer Masuk
+                  </div>
+                  <div style={{ fontSize: 30, fontWeight: 900 }}>
+                    {data.transfer.masuk.toLocaleString("id-ID")}
+                  </div>
                 </div>
                 <div className="card" style={{ padding: 16, borderRadius: 16 }}>
-                  <div style={{ color: "#6b7280", fontSize: 13, fontWeight: 800 }}>Transfer Keluar</div>
-                  <div style={{ fontSize: 28, fontWeight: 900 }}>{data.transfer.keluar.toLocaleString("id-ID")}</div>
+                  <div style={{ color: "#6b7280", fontSize: 13, fontWeight: 900 }}>
+                    Transfer Keluar
+                  </div>
+                  <div style={{ fontSize: 30, fontWeight: 900 }}>
+                    {data.transfer.keluar.toLocaleString("id-ID")}
+                  </div>
                 </div>
               </div>
               <div style={{ marginTop: 10, color: "#6b7280", fontSize: 13 }}>
-                Total transfer: <b style={{ color: "#111827" }}>{data.transfer.total.toLocaleString("id-ID")}</b>
+                Total transfer:{" "}
+                <b style={{ color: "#111827" }}>
+                  {data.transfer.total.toLocaleString("id-ID")}
+                </b>
               </div>
             </Card>
           </div>
         </div>
 
-        {/* RIGHT: KPI Column */}
+        {/* RIGHT KPI */}
         <div style={{ display: "grid", gap: 16 }}>
           <KpiBig
             title="Total Mahasiswa Aktif"
@@ -287,7 +427,7 @@ export default function MahasiswaAktif() {
           <KpiBig
             title="Mahasiswa Isi KRS"
             value={data.isiKrs.toLocaleString("id-ID")}
-            subtitle={`~${Math.round((data.isiKrs / data.totalAktif) * 100)}% dari total aktif`}
+            subtitle={`~${Math.round((data.isiKrs / Math.max(1, data.totalAktif)) * 100)}% dari total aktif`}
           />
           <KpiBig
             title="Mahasiswa Belum KRS"
@@ -298,17 +438,16 @@ export default function MahasiswaAktif() {
           <div className="card" style={{ borderRadius: 18 }}>
             <div style={{ fontWeight: 900, fontSize: 16, marginBottom: 10 }}>Catatan</div>
             <ul style={{ margin: 0, paddingLeft: 18, color: "#6b7280", display: "grid", gap: 8 }}>
-              <li>Chart masih placeholder (Step chart berikutnya).</li>
-              <li>Data dummy sudah “berelasi” via filter Tahun & Fakultas.</li>
-              <li>Nanti tinggal ganti source dari API.</li>
+              <li>Chart sudah aktif (Recharts).</li>
+              <li>Filter Tahun/Fakultas mempengaruhi KPI & chart.</li>
+              <li>Nanti tinggal ganti data dummy jadi API.</li>
             </ul>
           </div>
         </div>
       </div>
 
-      {/* Responsive note */}
       <div style={{ fontSize: 12, color: "#6b7280" }}>
-        *Catatan: Layout ini dibuat besar untuk dashboard. Kalau layar kecil, nanti kita buat versi responsive (Step sesudah chart).
+        *Layout dibuat besar untuk dashboard.
       </div>
     </div>
   );

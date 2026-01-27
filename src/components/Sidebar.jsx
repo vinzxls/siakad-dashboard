@@ -52,6 +52,7 @@ export default function Sidebar(){
             <Item to="/akademik/snbp" label="SNBP" />
             <Item to="/akademik/snbt" label="SNBT" />
             <Item to="/akademik/mandiri" label="Mandiri" />
+            <Item to="/akademik/lulusan" label="Lulusan" />
           </div>
         )}
       </nav>

@@ -1,45 +1,35 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 
-import Landing from "./pages/Landing";
+import DashboardHome from "./pages/DashboardHome";
 import AkademikLayout from "./layouts/AkademikLayout";
 
 import Beranda from "./pages/Beranda";
 import MahasiswaAktif from "./pages/MahasiswaAktif";
+import MahasiswaBaru from "./pages/MahasiswaBaru";
 import SNBP from "./pages/SNBP";
 import SNBT from "./pages/SNBT";
 import Mandiri from "./pages/Mandiri";
-
-// Placeholder pages
-const Stub = ({ title }) => (
-  <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:12, padding:16 }}>
-    <h2 style={{ margin:0 }}>{title}</h2>
-    <div style={{ marginTop:8, color:"#6b7280" }}>Placeholder (isi nanti)</div>
-  </div>
-);
+import Lulusan from "./pages/Lulusan";
 
 export default function App() {
   return (
     <Routes>
-      {/* Landing */}
-      <Route path="/" element={<Landing />} />
+      {/* DASHBOARD HOME */}
+      <Route path="/" element={<DashboardHome />} />
 
-      {/* Akademik */}
+      {/* AKADEMIK */}
       <Route path="/akademik" element={<AkademikLayout />}>
         <Route index element={<Navigate to="beranda" replace />} />
         <Route path="beranda" element={<Beranda />} />
         <Route path="mahasiswa-aktif" element={<MahasiswaAktif />} />
+        <Route path="mahasiswa-baru" element={<MahasiswaBaru />} />
         <Route path="snbp" element={<SNBP />} />
         <Route path="snbt" element={<SNBT />} />
         <Route path="mandiri" element={<Mandiri />} />
+        <Route path="lulusan" element={<Lulusan />} /> {/* ✅ FIX */}
       </Route>
 
-      {/* Domain lain (placeholder) */}
-      <Route path="/sdm" element={<Stub title="SDM" />} />
-      <Route path="/beasiswa" element={<Stub title="Beasiswa" />} />
-      <Route path="/akreditasi" element={<Stub title="Akreditasi" />} />
-      <Route path="/keuangan" element={<Stub title="Keuangan" />} />
-
-      {/* fallback */}
+      {/* FALLBACK */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
