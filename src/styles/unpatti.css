@@ -351,3 +351,59 @@ body{
 .home-card:hover .home-card-cta::after{
   width:22px;
 }
+
+/* === STAT CARD (angka besar) === */
+.statcard{
+  background: #5d6ee6;            /* biru/ungu seperti contoh */
+  color: #fff;
+  border-radius: 10px;
+  padding: 18px 18px;
+  box-shadow: 0 10px 18px rgba(0,0,0,.12);
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.statcard__header{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  opacity: .95;
+}
+
+.statcard__icon{
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: rgba(255,255,255,.18);
+  font-size: 16px;
+}
+
+.statcard__title{
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: .2px;
+}
+
+.statcard__note{
+  font-size: 11px;
+  opacity: .9;
+  line-height: 1.2;
+  margin-top: 10px;
+}
+
+.statcard__value{
+  font-size: 46px;               /* bikin besar */
+  font-weight: 900;
+  line-height: 1;
+  margin-top: 12px;
+}
+
+/* varian warna kalau perlu */
+.statcard--purple{ background:#6b57d6; }
+.statcard--blue{ background:#4b78ff; }
+.statcard--teal{ background:#1aa6a6; }
+

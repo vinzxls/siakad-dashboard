@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import StatCard from "../components/StatCard";
 
 export default function Lulusan() {
   const [tahun, setTahun] = useState("2024");
@@ -15,7 +16,8 @@ export default function Lulusan() {
       FISIP: 0.18,
       Kedokteran: 0.08,
     };
-    const facFactor = FAC_WEIGHT[fakultas] ?? 0.2;
+
+    const facFactor = FAC_WEIGHT[fakultas] ?? 1;
 
     const total = Math.round(3400 * baseYear * facFactor);
     const tepatWaktu = Math.round(total * 0.62);
@@ -26,6 +28,7 @@ export default function Lulusan() {
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
+      {/* Header + Filter */}
       <div
         className="card"
         style={{
@@ -91,29 +94,38 @@ export default function Lulusan() {
         </div>
       </div>
 
+      {/* Stat besar (pakai StatCard) */}
       <div
         style={{
           display: "grid",
           gap: 16,
           gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+          alignItems: "stretch",
         }}
       >
-        <div className="card" style={{ padding: 20, borderRadius: 18 }}>
-          <div style={{ fontSize: 14, color: "#6b7280", fontWeight: 800 }}>Total Lulusan</div>
-          <div style={{ fontSize: 40, fontWeight: 900 }}>{data.total.toLocaleString("id-ID")}</div>
-        </div>
+        <StatCard
+          title="Total Lulusan"
+          value={data.total.toLocaleString("id-ID")}
+          icon="🎓"
+          className="statcard--purple"
+        />
 
-        <div className="card" style={{ padding: 20, borderRadius: 18 }}>
-          <div style={{ fontSize: 14, color: "#6b7280", fontWeight: 800 }}>Tepat Waktu</div>
-          <div style={{ fontSize: 40, fontWeight: 900 }}>{data.tepatWaktu.toLocaleString("id-ID")}</div>
-        </div>
+        <StatCard
+          title="Tepat Waktu"
+          value={data.tepatWaktu.toLocaleString("id-ID")}
+          icon="✅"
+          className="statcard--blue"
+        />
 
-        <div className="card" style={{ padding: 20, borderRadius: 18 }}>
-          <div style={{ fontSize: 14, color: "#6b7280", fontWeight: 800 }}>Tidak Tepat Waktu</div>
-          <div style={{ fontSize: 40, fontWeight: 900 }}>{data.tidakTepatWaktu.toLocaleString("id-ID")}</div>
-        </div>
+        <StatCard
+          title="Tidak Tepat Waktu"
+          value={data.tidakTepatWaktu.toLocaleString("id-ID")}
+          icon="⏳"
+          className="statcard--teal"
+        />
       </div>
 
+      {/* Catatan */}
       <div className="card" style={{ borderRadius: 18 }}>
         <div style={{ fontWeight: 900, fontSize: 16, marginBottom: 10 }}>Catatan</div>
         <div style={{ color: "#6b7280", fontSize: 13 }}>
