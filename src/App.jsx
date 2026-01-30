@@ -11,6 +11,11 @@ import SNBT from "./pages/SNBT";
 import Mandiri from "./pages/Mandiri";
 import Lulusan from "./pages/Lulusan";
 
+import PelaporanMahasiswaTahun from "./pages/Pelaporan/PelaporanMahasiswaTahun";
+import PelaporanMasaStudiIPK from "./pages/Pelaporan/PelaporanMasaStudiIPK";
+import PelaporanMhsDanLulusan from "./pages/Pelaporan/PelaporanMhsDanLulusan";
+
+
 export default function App() {
   return (
     <Routes>
@@ -27,6 +32,9 @@ export default function App() {
         <Route path="snbt" element={<SNBT />} />
         <Route path="mandiri" element={<Mandiri />} />
         <Route path="lulusan" element={<Lulusan />} /> {/* ✅ FIX */}
+        <Route path="Pelaporan/mahasiswa-tahun" element={<PelaporanMahasiswaTahun />} />
+        <Route path="Pelaporan/masa-studi-ipk" element={<PelaporanMasaStudiIPK />} />
+        <Route path="Pelaporan/mhs-dan-lulusan" element={<PelaporanMhsDanLulusan />} />
       </Route>
 
       {/* FALLBACK */}
