@@ -180,84 +180,140 @@ export default function Lulusan() {
   const [periodeAkhir, setPeriodeAkhir] = useState(2025);
   const [fakultas, setFakultas] = useState("Semua");
 
-  const vm = useMemo(() => {
-    const years = [periodeAkhir - 5, periodeAkhir - 4, periodeAkhir - 3, periodeAkhir - 2, periodeAkhir - 1, periodeAkhir];
+const vm = useMemo(() => {
+  const years = [periodeAkhir - 5, periodeAkhir - 4, periodeAkhir - 3, periodeAkhir - 2, periodeAkhir - 1, periodeAkhir];
 
-    // Data seperti screenshot (contoh)
-    const lulusanByYearRaw = {
-      2020: 0,
-      2021: 4521,
-      2022: 4372,
-      2023: 6179,
-      2024: 5492,
-      2025: 4915,
-    };
+  // Data dasar (seperti screenshot)
+  const lulusanByYearRaw = {
+    2020: 0,
+    2021: 4521,
+    2022: 4372,
+    2023: 6179,
+    2024: 5492,
+    2025: 4915,
+  };
 
-    const ipkByYearRaw = {
-      2020: 0,
-      2021: 3.32,
-      2022: 3.32,
-      2023: 3.31,
-      2024: 3.30,
-      2025: 3.38,
-    };
+  const ipkByYearRaw = {
+    2020: 0,
+    2021: 3.32,
+    2022: 3.32,
+    2023: 3.31,
+    2024: 3.30,
+    2025: 3.38,
+  };
 
-    const lamaStudiByYearRaw = {
-      2020: 4.8,
-      2021: 4.8,
-      2022: 4.6,
-      2023: 3.9,
-      2024: 3.7,
-      2025: 4.0,
-    };
+  const lamaStudiByYearRaw = {
+    2020: 4.8,
+    2021: 4.8,
+    2022: 4.6,
+    2023: 3.9,
+    2024: 3.7,
+    2025: 4.0,
+  };
 
-    // Fake “per fakultas 5 tahun terakhir” (buat bar chart kanan atas)
-    const fakultasList = [
-      "FKIP",
-      "FEBIS",
-      "HUKUM",
-      "FISIP",
-      "TEKNIK",
-      "PASCA",
-      "FKEDOK",
-      "FAPERTA",
-      "FAPERIK",
-      "SAINTEK",
-      "PSDKU ARU",
-      "PSDKU MBD",
-    ];
+  // Faktor fakultas
+  const facWeight = {
+    Semua: 1,
+    Hukum: 0.22,
+    Teknik: 0.28,
+    Ekonomi: 0.24,
+    FISIP: 0.18,
+    Kedokteran: 0.08,
+  };
+  const facFactor = facWeight[fakultas] ?? 1;
 
-    const facWeight = {
-      Semua: 1,
-      Hukum: 0.22,
-      Teknik: 0.28,
-      Ekonomi: 0.24,
-      FISIP: 0.18,
-      Kedokteran: 0.08,
-    };
-    const facFactor = facWeight[fakultas] ?? 0.2;
+  // Untuk scaling total (kalau Semua = 1, kalau fakultas = proporsi)
+  const scaleTotal = fakultas === "Semua" ? 1 : facFactor;
 
-    const lulusanByYear = years.map((y) => ({
+  // IPK bias per fakultas (biar terasa beda)
+  const ipkBias =
+    fakultas === "Kedokteran" ? 0.06 :
+    fakultas === "Teknik" ? -0.04 :
+    fakultas === "Hukum" ? 0.01 :
+    fakultas === "Ekonomi" ? 0.02 :
+    fakultas === "FISIP" ? 0.00 :
+    0;
+
+  // Lama studi bias per fakultas
+  const lamaBias =
+    fakultas === "Teknik" ? 0.20 :
+    fakultas === "Kedokteran" ? 0.15 :
+    fakultas === "Hukum" ? -0.05 :
+    fakultas === "Ekonomi" ? 0.05 :
+    0;
+
+  // Tepat waktu rate per fakultas
+  const tepatRate =
+    fakultas === "Kedokteran" ? 0.90 :
+    fakultas === "Teknik" ? 0.88 :
+    fakultas === "Hukum" ? 0.92 :
+    fakultas === "Ekonomi" ? 0.91 :
+    fakultas === "FISIP" ? 0.89 :
+    0.90;
+
+  const lulusanByYear = years.map((y) => {
+    const baseTotal = lulusanByYearRaw[y] ?? 0;
+    const total = Math.round(baseTotal * scaleTotal);
+
+    const ipkBase = ipkByYearRaw[y] ?? 0;
+    const ipk = ipkBase ? Number((ipkBase + ipkBias).toFixed(2)) : 0;
+
+    const lamaBase = lamaStudiByYearRaw[y] ?? 0;
+    const lama = lamaBase ? Number((lamaBase + lamaBias).toFixed(1)) : 0;
+
+    // tepat waktu % untuk tabel
+    const tepat = y === 2020 ? 0 : Math.round(tepatRate * 100);
+
+    // cumlaude per tahun (proporsional dengan total & sedikit variasi)
+    const cumlaudeRate =
+      fakultas === "Kedokteran" ? 0.10 :
+      fakultas === "Ekonomi" ? 0.08 :
+      fakultas === "Hukum" ? 0.07 :
+      fakultas === "Teknik" ? 0.06 :
+      0.07;
+
+    const cumlaude = y === 2020 ? 0 : Math.max(0, Math.round(total * cumlaudeRate));
+
+    return {
       year: String(y),
-      total: Math.round((lulusanByYearRaw[y] ?? 0) * (0.75 + facFactor)),
-      ipk: ipkByYearRaw[y] ?? 0,
-      lama: lamaStudiByYearRaw[y] ?? 0,
-      tepat: y === 2020 ? 0 : Math.round((0.88 + (y % 3) * 0.02) * 100), // % seperti tabel
-      cumlaude: y === 2020 ? 0 : (y === 2022 || y === 2021 ? 402 : 401),
-    }));
+      total,
+      ipk,
+      lama,
+      tepat,
+      cumlaude,
+    };
+  });
 
-    const totalTercatat = 106391; // seperti screenshot
-    const total5Tahun = lulusanByYear.slice(1).reduce((a, b) => a + b.total, 0); // 2021-2025
-    const ipkRata2 = 3.38; // seperti screenshot
-    const cumlaude5 = 2007; // seperti screenshot
+  // KPI
+  const totalTercatat = 106391; // global, biarkan tetap
 
-    const perFakultas = fakultasList.map((f, i) => {
-      const base = Math.max(120, Math.round((9500 / (i + 1)) * (0.85 + facFactor)));
-      return { fakultas: f, total: base };
-    });
+  // total 5 tahun terakhir (2021-2025)
+  const total5Tahun = lulusanByYear.slice(1).reduce((a, b) => a + b.total, 0);
 
-    return { years, lulusanByYear, totalTercatat, total5Tahun, ipkRata2, cumlaude5, perFakultas };
-  }, [periodeAkhir, fakultas]);
+  // rata-rata ipk 5 tahun (abaikan 2020)
+  const ipkList = lulusanByYear.slice(1).map((x) => x.ipk).filter((x) => x > 0);
+  const ipkRata2 = ipkList.length
+    ? Number((ipkList.reduce((a, b) => a + b, 0) / ipkList.length).toFixed(2))
+    : 0;
+
+  // total cumlaude 5 tahun
+  const cumlaude5 = lulusanByYear.slice(1).reduce((a, b) => a + b.cumlaude, 0);
+
+  // Per fakultas (kalau pilih Semua, tampil semua; kalau pilih fakultas tertentu, tetap tampil tapi disesuaikan)
+  const fakultasList = [
+    "FKIP","FEBIS","HUKUM","FISIP","TEKNIK","PASCA","FKEDOK","FAPERTA","FAPERIK","SAINTEK","PSDKU ARU","PSDKU MBD",
+  ];
+
+  const perFakultas = fakultasList.map((f, i) => {
+    const base = Math.max(120, Math.round(9276 / (i + 1)));
+    // kalau Semua: tampil full; kalau pilih fakultas: kecilkan agar “filter terasa”
+    const scaled = Math.round(base * (fakultas === "Semua" ? 1 : scaleTotal));
+    return { fakultas: f, total: scaled };
+  });
+
+  return { years, lulusanByYear, totalTercatat, total5Tahun, ipkRata2, cumlaude5, perFakultas };
+}, [periodeAkhir, fakultas]);
+
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
@@ -305,6 +361,8 @@ export default function Lulusan() {
                 <option value={2025}>2025</option>
                 <option value={2024}>2024</option>
                 <option value={2023}>2023</option>
+                <option value={2022}>2022</option>
+                <option value={2021}>2021</option>  
               </select>
             </label>
 
