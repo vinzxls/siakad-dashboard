@@ -144,6 +144,15 @@ export default function Sidebar() {
             <NavLink to="/akademik/mandiri" style={subLink}>
               Mandiri
             </NavLink>
+            <NavLink to="/akademik/mandiri-rpl" style={subLink}>
+              Mandiri RPL
+            </NavLink>
+            <NavLink to="/akademik/prestasi" style={subLink}>
+              Prestasi
+            </NavLink>
+            <NavLink to="/akademik/afirmasi" style={subLink}>
+              Afirmasi
+            </NavLink>
           </div>
         )}
 
@@ -164,14 +173,12 @@ export default function Sidebar() {
 
         {openPelaporan && (
           <div style={{ display: "grid", gap: 3, marginTop: 2, marginBottom: 6 }}>
-            <NavLink to="/akademik/pelaporan/mahasiswa-tahun" style={subLink}>
-              Mahasiswa/Tahun
+            <NavLink to="/akademik/pelaporan/checkpoint-1" style={subLink}>
+              Checkpoint 1
             </NavLink>
-            <NavLink to="/akademik/pelaporan/masa-studi-ipk" style={subLink}>
-              Masa Studi &amp; IPK
-            </NavLink>
-            <NavLink to="/akademik/pelaporan/mhs-dan-lulusan" style={subLink}>
-              Mhs dan Lulusan
+
+            <NavLink to="/akademik/pelaporan/checkpoint-2" style={subLink}>
+              Checkpoint 2
             </NavLink>
           </div>
         )}

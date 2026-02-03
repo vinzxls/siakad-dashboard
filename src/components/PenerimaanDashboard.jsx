@@ -16,6 +16,153 @@ import {
 
 const COLORS = ["#1e5aa8", "#60a5fa", "#93c5fd", "#bfdbfe", "#dbeafe"];
 
+/* ====== PROFILE PER JALUR (ini yang bikin beda-beda) ====== */
+const JALUR_PROFILE = {
+  snbp: {
+    label: "SNBP",
+    basePendaftar: 12500,
+    accRate: 0.55, // diterima dari pendaftar
+    regRate: 0.82, // registrasi dari diterima
+    maleRate: 0.46, // rasio laki-laki dari registrasi
+    trendBoost: [0.90, 0.95, 1.00, 1.03, 1.06],
+    topProdiBase: [
+      ["Teknik Informatika", 320],
+      ["Manajemen", 290],
+      ["Hukum", 260],
+      ["Ilmu Komunikasi", 235],
+      ["Akuntansi", 210],
+      ["PGSD", 200],
+    ],
+    sekolahBase: [
+      ["SMA Negeri 1 Ambon", 92],
+      ["SMA Negeri 2 Ambon", 85],
+      ["SMA Kristen 1", 78],
+      ["SMA Negeri 3 Ambon", 72],
+      ["SMK Negeri 1", 65],
+    ],
+  },
+
+  snbt: {
+    label: "SNBT",
+    basePendaftar: 14800,
+    accRate: 0.50,
+    regRate: 0.80,
+    maleRate: 0.50,
+    trendBoost: [0.88, 0.94, 1.00, 1.04, 1.08],
+    topProdiBase: [
+      ["Teknik Informatika", 360],
+      ["Kedokteran", 340],
+      ["Manajemen", 310],
+      ["Hukum", 275],
+      ["Farmasi", 240],
+      ["Akuntansi", 220],
+    ],
+    sekolahBase: [
+      ["SMA Negeri 1 Ambon", 88],
+      ["SMA Negeri 4 Ambon", 80],
+      ["SMA Negeri 2 Ambon", 78],
+      ["SMK Negeri 1", 70],
+      ["SMA Kristen 2", 62],
+    ],
+  },
+
+  mandiri: {
+    label: "MANDIRI",
+    basePendaftar: 9800,
+    accRate: 0.45,
+    regRate: 0.78,
+    maleRate: 0.52,
+    trendBoost: [0.86, 0.92, 1.00, 1.06, 1.10],
+    topProdiBase: [
+      ["Manajemen", 340],
+      ["Hukum", 300],
+      ["Teknik Sipil", 260],
+      ["Ilmu Administrasi", 240],
+      ["Akuntansi", 220],
+      ["Teknik Informatika", 210],
+    ],
+    sekolahBase: [
+      ["SMA Negeri 2 Ambon", 86],
+      ["SMA Negeri 1 Ambon", 80],
+      ["SMK Negeri 1", 74],
+      ["SMA Negeri 3 Ambon", 68],
+      ["SMA Swasta X", 60],
+    ],
+  },
+
+  rpl: {
+    label: "MANDIRI RPL",
+    basePendaftar: 1650,
+    accRate: 0.62,
+    regRate: 0.88,
+    maleRate: 0.58,
+    trendBoost: [0.78, 0.86, 0.95, 1.05, 1.12],
+    topProdiBase: [
+      ["Manajemen", 140],
+      ["Teknik Informatika", 135],
+      ["Akuntansi", 115],
+      ["Hukum", 95],
+      ["Administrasi Publik", 90],
+      ["Sistem Informasi", 85],
+    ],
+    sekolahBase: [
+      ["Instansi/Perusahaan A", 55],
+      ["Instansi/Perusahaan B", 48],
+      ["Komunitas Profesi C", 42],
+      ["Lembaga Pelatihan D", 38],
+      ["Lainnya", 30],
+    ],
+  },
+
+  prestasi: {
+    label: "PRESTASI",
+    basePendaftar: 2400,
+    accRate: 0.58,
+    regRate: 0.90,
+    maleRate: 0.44,
+    trendBoost: [0.84, 0.92, 1.00, 1.06, 1.12],
+    topProdiBase: [
+      ["Ilmu Komunikasi", 130],
+      ["Manajemen", 125],
+      ["Hukum", 115],
+      ["PGSD", 110],
+      ["Akuntansi", 100],
+      ["Teknik Informatika", 95],
+    ],
+    sekolahBase: [
+      ["SMA Unggulan A", 45],
+      ["SMA Negeri 1 Ambon", 42],
+      ["SMA Negeri 2 Ambon", 40],
+      ["SMA Kristen 1", 36],
+      ["SMA Unggulan B", 32],
+    ],
+  },
+
+  afirmasi: {
+    label: "AFIRMASI",
+    basePendaftar: 1900,
+    accRate: 0.60,
+    regRate: 0.92,
+    maleRate: 0.47,
+    trendBoost: [0.82, 0.90, 1.00, 1.05, 1.10],
+    topProdiBase: [
+      ["PGSD", 140],
+      ["Keperawatan", 120],
+      ["Manajemen", 110],
+      ["Hukum", 95],
+      ["Agribisnis", 90],
+      ["Teknik Informatika", 80],
+    ],
+    sekolahBase: [
+      ["SMA Daerah 1", 52],
+      ["SMA Daerah 2", 46],
+      ["SMK Daerah 1", 40],
+      ["SMA Daerah 3", 36],
+      ["Lainnya", 30],
+    ],
+  },
+};
+
 function Card({ title, right, children }) {
   return (
     <section className="card" style={{ display: "grid", gap: 12 }}>
@@ -37,10 +184,58 @@ function Card({ title, right, children }) {
 
 function KpiBig({ title, value, subtitle }) {
   return (
-    <div className="card" style={{ padding: 20, borderRadius: 18, display: "grid", gap: 6 }}>
-      <div style={{ fontSize: 14, color: "#6b7280", fontWeight: 800 }}>{title}</div>
-      <div style={{ fontSize: 40, fontWeight: 900, lineHeight: 1.05 }}>{value}</div>
-      {subtitle ? <div style={{ fontSize: 13, color: "#6b7280" }}>{subtitle}</div> : null}
+    <div
+      className="card"
+      style={{ padding: 20, borderRadius: 18, display: "grid", gap: 6 }}
+    >
+      <div style={{ fontSize: 14, color: "#6b7280", fontWeight: 800 }}>
+        {title}
+      </div>
+      <div style={{ fontSize: 40, fontWeight: 900, lineHeight: 1.05 }}>
+        {value}
+      </div>
+      {subtitle ? (
+        <div style={{ fontSize: 13, color: "#6b7280" }}>{subtitle}</div>
+      ) : null}
+    </div>
+  );
+}
+
+function formatID(n) {
+  try {
+    return Number(n).toLocaleString("id-ID");
+  } catch {
+    return n;
+  }
+}
+
+function CustomTooltip({ active, payload, label }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div
+      style={{
+        background: "#fff",
+        border: "1px solid #e5e7eb",
+        borderRadius: 12,
+        padding: 10,
+        boxShadow: "0 10px 20px rgba(0,0,0,0.08)",
+      }}
+    >
+      <div style={{ fontWeight: 900, marginBottom: 6 }}>{label}</div>
+      {payload.map((p, i) => (
+        <div
+          key={i}
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 14,
+            fontSize: 13,
+          }}
+        >
+          <span style={{ color: "#6b7280", fontWeight: 800 }}>{p.name}</span>
+          <span style={{ fontWeight: 900 }}>{formatID(p.value)}</span>
+        </div>
+      ))}
     </div>
   );
 }
@@ -50,7 +245,14 @@ function Donut({ data }) {
     <div style={{ height: 320 }}>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
-          <Pie data={data} dataKey="value" nameKey="label" innerRadius={80} outerRadius={120} paddingAngle={2}>
+          <Pie
+            data={data}
+            dataKey="value"
+            nameKey="label"
+            innerRadius={80}
+            outerRadius={120}
+            paddingAngle={2}
+          >
             {data.map((_, i) => (
               <Cell key={i} fill={COLORS[i % COLORS.length]} />
             ))}
@@ -62,44 +264,6 @@ function Donut({ data }) {
   );
 }
 
-function SmartXAxisTick({ x, y, payload }) {
-  const raw = String(payload?.value ?? "");
-
-  // wrap jadi max 2 baris, masing-masing max 12 karakter
-  const words = raw.split(" ");
-  const lines = [];
-  let line = "";
-
-  for (const w of words) {
-    const next = line ? `${line} ${w}` : w;
-    if (next.length <= 12) {
-      line = next;
-    } else {
-      if (line) lines.push(line);
-      line = w;
-    }
-    if (lines.length === 2) break;
-  }
-  if (lines.length < 2 && line) lines.push(line);
-
-  // kalau masih terlalu panjang, potong baris ke-2
-  if (lines[1] && lines[1].length > 12) lines[1] = lines[1].slice(0, 11) + "…";
-  // kalau label 1 kata panjang banget, potong baris 1
-  if (!lines[1] && lines[0] && lines[0].length > 12) lines[0] = lines[0].slice(0, 11) + "…";
-
-  return (
-    <g transform={`translate(${x},${y})`}>
-      <text x={0} y={0} dy={12} textAnchor="middle" style={{ fontSize: 12, fill: "#111827" }}>
-        {lines.map((t, i) => (
-          <tspan key={i} x="0" dy={i === 0 ? 0 : 14}>
-            {t}
-          </tspan>
-        ))}
-      </text>
-    </g>
-  );
-}
-
 function shortLabel(str, max = 12) {
   const s = String(str ?? "");
   if (s.length <= max) return s;
@@ -107,7 +271,10 @@ function shortLabel(str, max = 12) {
 }
 
 function Bars({ data, xKey, yKey }) {
-  const maxLen = Math.max(...data.map((d) => String(d?.[xKey] ?? "").length), 0);
+  const maxLen = Math.max(
+    ...data.map((d) => String(d?.[xKey] ?? "").length),
+    0
+  );
   const needsSpace = maxLen > 12;
 
   return (
@@ -128,7 +295,7 @@ function Bars({ data, xKey, yKey }) {
           <YAxis tick={{ fontSize: 12 }} />
           <Tooltip
             formatter={(v) => formatID(v)}
-            labelFormatter={(label) => String(label ?? "")} // tampilkan full label
+            labelFormatter={(label) => String(label ?? "")}
           />
           <Bar dataKey={yKey} fill="#1e5aa8" radius={[10, 10, 0, 0]} />
         </BarChart>
@@ -137,25 +304,45 @@ function Bars({ data, xKey, yKey }) {
   );
 }
 
-function formatID(n) {
-  try { return Number(n).toLocaleString("id-ID"); } catch { return n; }
-}
+function SmartXAxisTick({ x, y, payload }) {
+  const raw = String(payload?.value ?? "");
+  const words = raw.split(" ");
+  const lines = [];
+  let line = "";
 
-function CustomTooltip({ active, payload, label }) {
-  if (!active || !payload?.length) return null;
+  for (const w of words) {
+    const next = line ? `${line} ${w}` : w;
+    if (next.length <= 12) {
+      line = next;
+    } else {
+      if (line) lines.push(line);
+      line = w;
+    }
+    if (lines.length === 2) break;
+  }
+  if (lines.length < 2 && line) lines.push(line);
+
+  if (lines[1] && lines[1].length > 12) lines[1] = lines[1].slice(0, 11) + "…";
+  if (!lines[1] && lines[0] && lines[0].length > 12) lines[0] = lines[0].slice(0, 11) + "…";
+
   return (
-    <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: 10, boxShadow: "0 10px 20px rgba(0,0,0,0.08)" }}>
-      <div style={{ fontWeight: 900, marginBottom: 6 }}>{label}</div>
-      {payload.map((p, i) => (
-        <div key={i} style={{ display: "flex", justifyContent: "space-between", gap: 14, fontSize: 13 }}>
-          <span style={{ color: "#6b7280", fontWeight: 800 }}>{p.name}</span>
-          <span style={{ fontWeight: 900 }}>{formatID(p.value)}</span>
-        </div>
-      ))}
-    </div>
+    <g transform={`translate(${x},${y})`}>
+      <text
+        x={0}
+        y={0}
+        dy={12}
+        textAnchor="middle"
+        style={{ fontSize: 12, fill: "#111827" }}
+      >
+        {lines.map((t, i) => (
+          <tspan key={i} x="0" dy={i === 0 ? 0 : 14}>
+            {t}
+          </tspan>
+        ))}
+      </text>
+    </g>
   );
 }
-
 
 function Lines({ data, xKey, yKey }) {
   return (
@@ -166,7 +353,13 @@ function Lines({ data, xKey, yKey }) {
           <SmartXAxisTick dataKey={xKey} />
           <YAxis />
           <Tooltip content={<CustomTooltip />} />
-          <Line type="monotone" dataKey={yKey} stroke="#1e5aa8" strokeWidth={3} dot={false} />
+          <Line
+            type="monotone"
+            dataKey={yKey}
+            stroke="#1e5aa8"
+            strokeWidth={3}
+            dot={false}
+          />
         </LineChart>
       </ResponsiveContainer>
     </div>
@@ -178,8 +371,9 @@ export default function PenerimaanDashboard({ jalurKey = "snbp", title = "SNBP" 
   const [fakultas, setFakultas] = useState("Semua");
 
   const data = useMemo(() => {
+    const profile = JALUR_PROFILE[jalurKey] ?? JALUR_PROFILE.snbp;
+
     const baseYear = tahun === "2025" ? 1.06 : tahun === "2024" ? 1 : 0.9;
-    const jalurFactor = jalurKey === "snbp" ? 0.34 : jalurKey === "snbt" ? 0.41 : 0.25;
 
     // bobot fakultas supaya beda-beda
     const FAC_WEIGHT = {
@@ -192,10 +386,10 @@ export default function PenerimaanDashboard({ jalurKey = "snbp", title = "SNBP" 
     };
     const facFactor = FAC_WEIGHT[fakultas] ?? 0.2;
 
-    // KPI utama
-    const pendaftar = Math.round(12500 * baseYear * jalurFactor * facFactor);
-    const diterima = Math.round(pendaftar * (jalurKey === "snbp" ? 0.55 : jalurKey === "snbt" ? 0.5 : 0.45));
-    const registrasi = Math.round(diterima * 0.82);
+    // KPI utama (bener-bener beda per jalur)
+    const pendaftar = Math.round(profile.basePendaftar * baseYear * facFactor);
+    const diterima = Math.round(pendaftar * profile.accRate);
+    const registrasi = Math.round(diterima * profile.regRate);
     const tidakRegistrasi = Math.max(0, diterima - registrasi);
 
     // Donut registrasi
@@ -204,49 +398,37 @@ export default function PenerimaanDashboard({ jalurKey = "snbp", title = "SNBP" 
       { label: "Tidak Registrasi", value: tidakRegistrasi },
     ];
 
-    // Gender donut (berdasarkan registrasi)
-    const laki = Math.round(registrasi * 0.48);
+    // Gender donut (beda per jalur)
+    const laki = Math.round(registrasi * profile.maleRate);
     const perempuan = Math.max(0, registrasi - laki);
     const genderDonut = [
       { label: "Laki-laki", value: laki },
       { label: "Perempuan", value: perempuan },
     ];
 
-    // Trend (line) pendaftar/diterima/registrasi per tahun 
-    const trend = [
-      { year: "2021", pendaftar: Math.round(10500 * 0.92 * jalurFactor * facFactor), diterima: Math.round(10500 * 0.92 * jalurFactor * facFactor * 0.5), registrasi: Math.round(10500 * 0.92 * jalurFactor * facFactor * 0.5 * 0.82) },
-      { year: "2022", pendaftar: Math.round(11200 * 0.96 * jalurFactor * facFactor), diterima: Math.round(11200 * 0.96 * jalurFactor * facFactor * 0.5), registrasi: Math.round(11200 * 0.96 * jalurFactor * facFactor * 0.5 * 0.82) },
-      { year: "2023", pendaftar: Math.round(11800 * 1.0 * jalurFactor * facFactor), diterima: Math.round(11800 * 1.0 * jalurFactor * facFactor * 0.5), registrasi: Math.round(11800 * 1.0 * jalurFactor * facFactor * 0.5 * 0.82) },
-      { year: "2024", pendaftar: Math.round(12500 * 1.02 * jalurFactor * facFactor), diterima: Math.round(12500 * 1.02 * jalurFactor * facFactor * 0.5), registrasi: Math.round(12500 * 1.02 * jalurFactor * facFactor * 0.5 * 0.82) },
-      { year: "2025", pendaftar: Math.round(13200 * 1.05 * jalurFactor * facFactor), diterima: Math.round(13200 * 1.05 * jalurFactor * facFactor * 0.5), registrasi: Math.round(13200 * 1.05 * jalurFactor * facFactor * 0.5 * 0.82) },
-    ];
+    // Trend (line) (beda per jalur)
+    const years = ["2021", "2022", "2023", "2024", "2025"];
+    const trend = years.map((y, i) => {
+      const boost = profile.trendBoost[i] ?? 1;
+      const p = Math.round(profile.basePendaftar * boost * (y === "2025" ? 1.05 : y === "2024" ? 1.02 : y === "2023" ? 1.0 : y === "2022" ? 0.96 : 0.92) * facFactor);
+      const d = Math.round(p * profile.accRate);
+      const r = Math.round(d * profile.regRate);
+      return { year: y, pendaftar: p, diterima: d, registrasi: r };
+    });
 
-    // Top Prodi (bar + table)
-    const topProdi = [
-      ["Teknik Informatika", 320],
-      ["Manajemen", 290],
-      ["Hukum", 260],
-      ["Kedokteran", 240],
-      ["Ilmu Komunikasi", 220],
-      ["Akuntansi", 200],
-    ]
+    // Top Prodi (beda daftar & bobot per jalur)
+    const topProdi = profile.topProdiBase
       .map(([prodi, base]) => ({
         name: prodi,
-        value: Math.max(10, Math.round(base * baseYear * (0.75 + jalurFactor) * facFactor)),
+        value: Math.max(10, Math.round(base * baseYear * (0.9 + profile.accRate) * facFactor)),
       }))
       .sort((a, b) => b.value - a.value);
 
-    // Asal sekolah (bar + table)
-    const asalSekolah = [
-      ["SMA Negeri 1 Ambon", 90],
-      ["SMA Negeri 2 Ambon", 82],
-      ["SMA Kristen 1", 75],
-      ["SMA Negeri 3 Ambon", 70],
-      ["SMK Negeri 1", 62],
-    ]
+    // Asal sekolah (beda daftar & bobot per jalur)
+    const asalSekolah = profile.sekolahBase
       .map(([sekolah, base]) => ({
         name: sekolah,
-        value: Math.max(5, Math.round(base * baseYear * (0.75 + jalurFactor) * facFactor)),
+        value: Math.max(5, Math.round(base * baseYear * (0.9 + profile.regRate) * facFactor)),
       }))
       .sort((a, b) => b.value - a.value);
 
@@ -268,6 +450,7 @@ export default function PenerimaanDashboard({ jalurKey = "snbp", title = "SNBP" 
       trend,
       topProdi,
       asalSekolah,
+      _profileLabel: profile.label,
     };
   }, [tahun, fakultas, jalurKey]);
 
@@ -287,7 +470,7 @@ export default function PenerimaanDashboard({ jalurKey = "snbp", title = "SNBP" 
         <div style={{ display: "grid", gap: 4 }}>
           <div style={{ fontSize: 20, fontWeight: 900 }}>{title}</div>
           <div style={{ fontSize: 13, color: "#6b7280" }}>
-            Statistik penerimaan jalur {title} berdasarkan tahun & fakultas.
+            Statistik penerimaan jalur {data._profileLabel} berdasarkan tahun & fakultas.
           </div>
         </div>
 
@@ -475,9 +658,9 @@ export default function PenerimaanDashboard({ jalurKey = "snbp", title = "SNBP" 
           <div className="card" style={{ borderRadius: 18 }}>
             <div style={{ fontWeight: 900, fontSize: 16, marginBottom: 10 }}>Catatan</div>
             <ul style={{ margin: 0, paddingLeft: 18, color: "#6b7280", display: "grid", gap: 8 }}>
-              <li>Chart aktif (Recharts) untuk SNBP/SNBT/Mandiri otomatis.</li>
-              <li>Filter Tahun/Fakultas mempengaruhi KPI & chart.</li>
-              <li>Data masih dummy, tinggal ganti API.</li>
+              <li>Komponen sama untuk semua jalur, tapi profil data beda per jalur.</li>
+              <li>Filter Tahun/Fakultas tetap mempengaruhi KPI & chart.</li>
+              <li>Nanti tinggal ganti sumber dummy → API SIAKAD pakai jalurKey.</li>
             </ul>
           </div>
         </div>

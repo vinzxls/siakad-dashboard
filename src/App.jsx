@@ -10,10 +10,17 @@ import SNBP from "./pages/SNBP";
 import SNBT from "./pages/SNBT";
 import Mandiri from "./pages/Mandiri";
 import Lulusan from "./pages/Lulusan";
+import MandiriRPL from "./pages/MandiriRPL";
+import Prestasi from "./pages/Prestasi";
+import Afirmasi from "./pages/Afirmasi";
 
-import PelaporanMahasiswaTahun from "./pages/Pelaporan/PelaporanMahasiswaTahun";
-import PelaporanMasaStudiIPK from "./pages/Pelaporan/PelaporanMasaStudiIPK";
-import PelaporanMhsDanLulusan from "./pages/Pelaporan/PelaporanMhsDanLulusan";
+
+
+
+
+import PelaporanMahasiswaTahun from "./pages/pelaporan/PelaporanMahasiswaTahun";
+import PelaporanMasaStudiIPK from "./pages/pelaporan/PelaporanMasaStudiIPK";
+
 
 
 export default function App() {
@@ -32,9 +39,17 @@ export default function App() {
         <Route path="snbt" element={<SNBT />} />
         <Route path="mandiri" element={<Mandiri />} />
         <Route path="lulusan" element={<Lulusan />} /> {/* ✅ FIX */}
-        <Route path="Pelaporan/mahasiswa-tahun" element={<PelaporanMahasiswaTahun />} />
-        <Route path="Pelaporan/masa-studi-ipk" element={<PelaporanMasaStudiIPK />} />
-        <Route path="Pelaporan/mhs-dan-lulusan" element={<PelaporanMhsDanLulusan />} />
+
+        <Route path="mandiri-rpl" element={<MandiriRPL />} />
+        <Route path="prestasi" element={<Prestasi />} />
+        <Route path="afirmasi" element={<Afirmasi />} />
+
+        <Route path="pelaporan">
+          <Route index element={<Navigate to="checkpoint-1" replace />} />
+          <Route path="checkpoint-1" element={<PelaporanMahasiswaTahun />} />
+          <Route path="checkpoint-2" element={<PelaporanMasaStudiIPK />} />
+        </Route>
+
       </Route>
 
       {/* FALLBACK */}
