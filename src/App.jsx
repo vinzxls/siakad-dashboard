@@ -6,53 +6,39 @@ import AkademikLayout from "./layouts/AkademikLayout";
 import Beranda from "./pages/Beranda";
 import MahasiswaAktif from "./pages/MahasiswaAktif";
 import MahasiswaBaru from "./pages/MahasiswaBaru";
-import SNBP from "./pages/SNBP";
-import SNBT from "./pages/SNBT";
-import Mandiri from "./pages/Mandiri";
 import Lulusan from "./pages/Lulusan";
-import MandiriRPL from "./pages/MandiriRPL";
-import Prestasi from "./pages/Prestasi";
-import Afirmasi from "./pages/Afirmasi";
-
-
-
-
 
 import PelaporanMahasiswaTahun from "./pages/pelaporan/PelaporanMahasiswaTahun";
 import PelaporanMasaStudiIPK from "./pages/pelaporan/PelaporanMasaStudiIPK";
 
-
-
 export default function App() {
   return (
     <Routes>
-      {/* DASHBOARD HOME */}
       <Route path="/" element={<DashboardHome />} />
 
-      {/* AKADEMIK */}
       <Route path="/akademik" element={<AkademikLayout />}>
         <Route index element={<Navigate to="beranda" replace />} />
         <Route path="beranda" element={<Beranda />} />
         <Route path="mahasiswa-aktif" element={<MahasiswaAktif />} />
         <Route path="mahasiswa-baru" element={<MahasiswaBaru />} />
-        <Route path="snbp" element={<SNBP />} />
-        <Route path="snbt" element={<SNBT />} />
-        <Route path="mandiri" element={<Mandiri />} />
-        <Route path="lulusan" element={<Lulusan />} /> {/* ✅ FIX */}
 
-        <Route path="mandiri-rpl" element={<MandiriRPL />} />
-        <Route path="prestasi" element={<Prestasi />} />
-        <Route path="afirmasi" element={<Afirmasi />} />
+        {/* redirect route lama */}
+        <Route path="snbp" element={<Navigate to="/akademik/mahasiswa-baru" replace />} />
+        <Route path="snbt" element={<Navigate to="/akademik/mahasiswa-baru" replace />} />
+        <Route path="mandiri" element={<Navigate to="/akademik/mahasiswa-baru" replace />} />
+        <Route path="mandiri-rpl" element={<Navigate to="/akademik/mahasiswa-baru" replace />} />
+        <Route path="prestasi" element={<Navigate to="/akademik/mahasiswa-baru" replace />} />
+        <Route path="afirmasi" element={<Navigate to="/akademik/mahasiswa-baru" replace />} />
+
+        <Route path="lulusan" element={<Lulusan />} />
 
         <Route path="pelaporan">
           <Route index element={<Navigate to="checkpoint-1" replace />} />
           <Route path="checkpoint-1" element={<PelaporanMahasiswaTahun />} />
           <Route path="checkpoint-2" element={<PelaporanMasaStudiIPK />} />
         </Route>
-
       </Route>
 
-      {/* FALLBACK */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

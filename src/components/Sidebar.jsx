@@ -4,7 +4,6 @@ import unpattiLogo from "../assets/unpatti-logo.png";
 
 export default function Sidebar() {
   const [openMahasiswa, setOpenMahasiswa] = useState(true);
-  const [openPenerimaan, setOpenPenerimaan] = useState(true);
   const [openPelaporan, setOpenPelaporan] = useState(true);
 
   const mainLink = ({ isActive }) => ({
@@ -19,8 +18,8 @@ export default function Sidebar() {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    minHeight: 44,            // ✅ bikin tinggi normal
-});
+    minHeight: 44,
+  });
 
   const groupBtn = {
     padding: "10px 12px",
@@ -35,8 +34,9 @@ export default function Sidebar() {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    minHeight: 44,            // ✅ sama tinggi dengan link
-};
+    minHeight: 44,
+    width: "100%",
+  };
 
   const subLink = ({ isActive }) => ({
     padding: "8px 12px 8px 34px",
@@ -48,9 +48,8 @@ export default function Sidebar() {
     color: isActive ? "#1e5aa8" : "#334155",
     background: isActive ? "rgba(30,90,168,0.10)" : "transparent",
     display: "block",
-    minHeight: 38,            // ✅ submenu juga normal
+    minHeight: 38,
   });
-
 
   const caret = (open) => (
     <span style={{ fontSize: 12, opacity: 0.7 }}>{open ? "▾" : "▸"}</span>
@@ -120,48 +119,19 @@ export default function Sidebar() {
             <NavLink to="/akademik/mahasiswa-aktif" style={subLink}>
               Mahasiswa Aktif
             </NavLink>
-          </div>
-        )}
 
-        {/* Mahasiswa Baru dropdown */}
-        <button
-          type="button"
-          style={groupBtn}
-          onClick={() => setOpenPenerimaan((v) => !v)}
-        >
-          <span>Mahasiswa Baru</span>
-          {caret(openPenerimaan)}
-        </button>
-
-        {openPenerimaan && (
-          <div style={{ display: "grid", gap: 3, marginTop: 2, marginBottom: 6 }}>
-            <NavLink to="/akademik/snbp" style={subLink}>
-              SNBP
-            </NavLink>
-            <NavLink to="/akademik/snbt" style={subLink}>
-              SNBT
-            </NavLink>
-            <NavLink to="/akademik/mandiri" style={subLink}>
-              Mandiri
-            </NavLink>
-            <NavLink to="/akademik/mandiri-rpl" style={subLink}>
-              Mandiri RPL
-            </NavLink>
-            <NavLink to="/akademik/prestasi" style={subLink}>
-              Prestasi
-            </NavLink>
-            <NavLink to="/akademik/afirmasi" style={subLink}>
-              Afirmasi
+            {/* ✅ hanya 1 route Mahasiswa Baru */}
+            <NavLink to="/akademik/mahasiswa-baru" style={subLink}>
+              Mahasiswa Baru
             </NavLink>
           </div>
         )}
 
         <NavLink to="/akademik/lulusan" style={mainLink}>
-        Lulusan
+          Lulusan
         </NavLink>
 
-
-        {/* ✅ Pelaporan dropdown */}
+        {/* Pelaporan dropdown */}
         <button
           type="button"
           style={groupBtn}
@@ -176,7 +146,6 @@ export default function Sidebar() {
             <NavLink to="/akademik/pelaporan/checkpoint-1" style={subLink}>
               Checkpoint 1
             </NavLink>
-
             <NavLink to="/akademik/pelaporan/checkpoint-2" style={subLink}>
               Checkpoint 2
             </NavLink>
