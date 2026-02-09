@@ -10,36 +10,33 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  BarChart,
-  Bar,
   PieChart,
   Pie,
   Cell,
   Legend,
 } from "recharts";
 
-/* ===================== CARD WRAPPER ===================== */
+/* ===================== BASIC UI ===================== */
 function Card({ title, right, children }) {
   return (
-    <section className="card" style={{ display: "grid", gap: 12, borderRadius: 18 }}>
+    <section className="card" style={{ display: "grid", gap: 10, borderRadius: 16 }}>
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
-          gap: 12,
           alignItems: "center",
+          gap: 10,
           flexWrap: "wrap",
         }}
       >
-        <div style={{ fontWeight: 900, fontSize: 15 }}>{title}</div>
-        {right ? <div>{right}</div> : null}
+        <div style={{ fontWeight: 900, fontSize: 14 }}>{title}</div>
+        {right}
       </div>
       {children}
     </section>
   );
 }
 
-/* ===================== MINI KPI ===================== */
 function MiniKpi({ label, value, accent = "#1e5aa8", hint }) {
   return (
     <div
@@ -49,17 +46,41 @@ function MiniKpi({ label, value, accent = "#1e5aa8", hint }) {
         padding: 12,
         display: "grid",
         gap: 4,
-        borderLeft: `5px solid ${accent}`,
+        borderLeft: `4px solid ${accent}`,
       }}
     >
       <div style={{ fontSize: 11, fontWeight: 800, color: "#6b7280" }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 900, lineHeight: 1.1 }}>{value}</div>
+      <div style={{ fontSize: 18, fontWeight: 900 }}>{value}</div>
       {hint && <div style={{ fontSize: 11, color: "#6b7280" }}>{hint}</div>}
     </div>
   );
 }
 
-/* ===================== QUICK LINK ===================== */
+function Badge({ text, tone = "info" }) {
+  const map = {
+    info: { bg: "#eff6ff", fg: "#1e5aa8" },
+    warn: { bg: "#fff7ed", fg: "#c2410c" },
+    ok: { bg: "#ecfdf5", fg: "#047857" },
+  };
+  const t = map[tone] ?? map.info;
+
+  return (
+    <span
+      style={{
+        fontSize: 11,
+        fontWeight: 800,
+        padding: "4px 8px",
+        borderRadius: 999,
+        background: t.bg,
+        color: t.fg,
+        whiteSpace: "nowrap",
+      }}
+    >
+      {text}
+    </span>
+  );
+}
+
 function QuickLinkCard({ title, desc, to, icon }) {
   return (
     <NavLink
@@ -67,14 +88,14 @@ function QuickLinkCard({ title, desc, to, icon }) {
       className="card"
       style={{
         textDecoration: "none",
-        borderRadius: 16,
-        padding: 14,
+        borderRadius: 14,
+        padding: 12,
         display: "grid",
         gap: 6,
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ fontWeight: 900, fontSize: 14 }}>{title}</div>
+        <div style={{ fontWeight: 900, fontSize: 13, color: "#0f172a" }}>{title}</div>
         <span>{icon}</span>
       </div>
       <div style={{ fontSize: 12, color: "#6b7280" }}>{desc}</div>
@@ -84,76 +105,194 @@ function QuickLinkCard({ title, desc, to, icon }) {
 }
 
 /* ===================== HELPERS ===================== */
-const id = (n) => Number(n).toLocaleString("id-ID");
+const id = (n) => {
+  try {
+    return Number(n).toLocaleString("id-ID");
+  } catch {
+    return String(n);
+  }
+};
+
+// Komposisi jalur PER TAHUN (dummy tapi realistis)
+function getJalurShareByYear(tahun) {
+  // total harus = 1.0
+  // bedakan per tahun supaya donut jelas berubah
+  if (tahun === "2025") return { snbp: 0.30, snbt: 0.45, mandiri: 0.25 };
+  if (tahun === "2024") return { snbp: 0.34, snbt: 0.41, mandiri: 0.25 };
+  return { snbp: 0.38, snbt: 0.37, mandiri: 0.25 }; // 2023
+}
 
 /* ===================== PAGE ===================== */
 export default function BerandaAkademik() {
-  const [tahun] = useState("2025/2026");
-
-  /* KPI UTAMA (DIPERKECIL) */
-  const items = [
-    { title: "Total Mahasiswa", value: "18,240", icon: "👥", className: "statcard--purple" },
-    { title: "Mahasiswa Baru", value: "3,200", icon: "🎓", className: "statcard--green" },
-    { title: "Lulusan", value: "2,500", icon: "🏅", className: "statcard--orange" },
-    { title: "Mahasiswa Aktif", value: "16,910", icon: "✅", className: "statcard--blue" },
-    { title: "Registrasi Ulang", value: "15,580", icon: "🔄", className: "statcard--yellow" },
-  ];
+  const [tahun, setTahun] = useState("2025");
 
   const vm = useMemo(() => {
+    const yearFactor = tahun === "2025" ? 1 : tahun === "2024" ? 0.96 : 0.9;
+
+    // KPI utama (dummy)
+    const totalMahasiswa = Math.round(18240 * yearFactor);
+    const mahasiswaAktif = Math.round(16910 * yearFactor);
+    const maba = Math.round(3200 * yearFactor);
+    const registrasiUlang = Math.round(15580 * yearFactor);
+    const lulusan = Math.round(2500 * yearFactor);
+
+    // mini KPI
+    const registrasiMaba = Math.round(maba * 0.88);
+    const belumRegistrasi = Math.max(0, maba - registrasiMaba);
+    const nonaktif = Math.max(0, totalMahasiswa - mahasiswaAktif);
+    const ipk = (3.12 + (tahun === "2025" ? 0.04 : tahun === "2024" ? 0.02 : 0)).toFixed(2);
+
+    // tren aktif
+    const trenAktif = [
+      { tahun: "2021", v: Math.round(15200 * 0.92 * yearFactor) },
+      { tahun: "2022", v: Math.round(15800 * 0.96 * yearFactor) },
+      { tahun: "2023", v: Math.round(16350 * 0.99 * yearFactor) },
+      { tahun: "2024", v: Math.round(16910 * 1.01 * yearFactor) },
+      { tahun: "2025", v: Math.round(17320 * 1.04 * yearFactor) },
+    ];
+
+    // ✅ komposisi jalur (proporsi beda tiap tahun)
+    const share = getJalurShareByYear(tahun);
+    const snbp = Math.round(maba * share.snbp);
+    const snbt = Math.round(maba * share.snbt);
+    const mandiri = Math.max(0, maba - snbp - snbt);
+
+    const jalur = [
+      { name: "SNBP", value: snbp },
+      { name: "SNBT", value: snbt },
+      { name: "Mandiri", value: mandiri },
+    ];
+
+    const highlight = [
+      {
+        tone: belumRegistrasi > 400 ? "warn" : "info",
+        badge: "Registrasi",
+        text: `Belum registrasi ${id(belumRegistrasi)} mahasiswa`,
+      },
+      {
+        tone: nonaktif > 2000 ? "warn" : "info",
+        badge: "Status",
+        text: `Mahasiswa nonaktif ${id(nonaktif)} orang`,
+      },
+      {
+        tone: "ok",
+        badge: "Akademik",
+        text: `IPK rata-rata ${ipk}`,
+      },
+    ];
+
+    const items = [
+      { title: "Total Mahasiswa", value: id(totalMahasiswa), icon: "👥", className: "statcard--purple" },
+      { title: "Mahasiswa Baru", value: id(maba), icon: "🎓", className: "statcard--green" },
+      { title: "Lulusan", value: id(lulusan), icon: "🏅", className: "statcard--orange" },
+      { title: "Mahasiswa Aktif", value: id(mahasiswaAktif), icon: "✅", className: "statcard--blue" },
+      { title: "Registrasi Ulang", value: id(registrasiUlang), icon: "🔄", className: "statcard--yellow" },
+    ];
+
     return {
-      maba: 3200,
-      registrasi: 2810,
-      belum: 390,
-      ipk: "3.16",
-      trenAktif: [
-        { tahun: "2021", v: 15200 },
-        { tahun: "2022", v: 15800 },
-        { tahun: "2023", v: 16350 },
-        { tahun: "2024", v: 16910 },
-        { tahun: "2025", v: 17320 },
-      ],
-      jalur: [
-        { name: "SNBP", value: 1100 },
-        { name: "SNBT", value: 1350 },
-        { name: "Mandiri", value: 750 },
-      ],
+      items,
+      maba,
+      registrasiMaba,
+      belumRegistrasi,
+      ipk,
+      trenAktif,
+      jalur,
+      highlight,
     };
-  }, []);
+  }, [tahun]);
 
   const PIE_COLORS = ["#1e5aa8", "#60a5fa", "#6366f1"];
 
-  return (
-    <div style={{ display: "grid", gap: 16 }}>
-      {/* HEADER */}
-      <div className="card" style={{ borderRadius: 18 }}>
-        <div style={{ fontSize: 18, fontWeight: 900 }}>Ringkasan Akademik</div>
-        <div style={{ fontSize: 13, color: "#6b7280" }}>
-          Snapshot data akademik • Tahun {tahun}
-        </div>
-      </div>
+  // ✅ Legend custom: tampilkan nilai + persen (biar perubahan tahun kelihatan)
+  const renderLegend = (props) => {
+    const { payload } = props;
+    if (!payload?.length) return null;
 
-      {/* KPI UTAMA — RESPONSIVE */}
+    const total = vm.jalur.reduce((a, b) => a + b.value, 0) || 1;
+
+    return (
+      <div style={{ display: "grid", gap: 6, marginTop: 6 }}>
+        {payload.map((p, i) => {
+          const item = vm.jalur[i];
+          const percent = Math.round((item.value / total) * 100);
+          return (
+            <div key={p.value} style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span
+                  style={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: 3,
+                    background: p.color,
+                    display: "inline-block",
+                  }}
+                />
+                <span style={{ fontWeight: 900, color: "#0f172a" }}>{p.value}</span>
+                <span style={{ color: "#6b7280", fontWeight: 800 }}>{percent}%</span>
+              </div>
+              <div style={{ fontWeight: 900, color: "#0f172a" }}>{id(item.value)}</div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ display: "grid", gap: 14 }}>
+      {/* HEADER + DROPDOWN TAHUN */}
       <div
+        className="card"
         style={{
-          display: "grid",
+          borderRadius: 16,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
           gap: 12,
-          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+          flexWrap: "wrap",
         }}
       >
-        <StatSection items={items} />
+        <div>
+          <div style={{ fontSize: 17, fontWeight: 900 }}>Ringkasan Akademik</div>
+          <div style={{ fontSize: 13, color: "#6b7280" }}>Snapshot data akademik per tahun</div>
+        </div>
+
+        <label style={{ fontSize: 12, fontWeight: 800, color: "#6b7280" }}>
+          Tahun
+          <select
+            value={tahun}
+            onChange={(e) => setTahun(e.target.value)}
+            style={{
+              marginLeft: 8,
+              padding: "6px 10px",
+              borderRadius: 10,
+              border: "1px solid #e5e7eb",
+              background: "#fff",
+              fontSize: 13,
+              fontWeight: 800,
+            }}
+          >
+            <option value="2025">2025</option>
+            <option value="2024">2024</option>
+            <option value="2023">2023</option>
+          </select>
+        </label>
       </div>
+
+      {/* KPI UTAMA */}
+      <StatSection items={vm.items} />
 
       {/* MINI KPI */}
       <div
         style={{
           display: "grid",
           gap: 12,
-          gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
         }}
       >
         <MiniKpi label="Mahasiswa Baru" value={id(vm.maba)} />
-        <MiniKpi label="Registrasi" value={id(vm.registrasi)} accent="#2563eb" />
-        <MiniKpi label="Belum Registrasi" value={id(vm.belum)} accent="#f59e0b" />
+        <MiniKpi label="Registrasi" value={id(vm.registrasiMaba)} accent="#2563eb" />
+        <MiniKpi label="Belum Registrasi" value={id(vm.belumRegistrasi)} accent="#f59e0b" />
         <MiniKpi label="IPK Rata-rata" value={vm.ipk} accent="#6366f1" />
       </div>
 
@@ -161,41 +300,87 @@ export default function BerandaAkademik() {
       <div
         style={{
           display: "grid",
-          gap: 16,
+          gap: 14,
           gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-          alignItems: "start",
         }}
       >
         <Card title="Tren Mahasiswa Aktif (5 Tahun)">
-          <div style={{ height: 220 }}>
+          <div style={{ height: 210 }}>
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={vm.trenAktif}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="tahun" />
                 <YAxis />
-                <Tooltip />
+                <Tooltip formatter={(v) => id(v)} />
                 <Line dataKey="v" stroke="#1e5aa8" strokeWidth={3} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </Card>
 
-        <Card title="Komposisi Jalur Penerimaan">
-          <div style={{ height: 220 }}>
+        {/* ✅ FIX: tinggi dinaikkan + donut dinaikkan (cy) supaya tidak kepotong */}
+        <Card title="Komposisi Jalur Penerimaan" right={<Badge text={`Tahun ${tahun}`} tone="info" />}>
+          <div style={{ height: 280 }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={vm.jalur} dataKey="value" nameKey="name" innerRadius={60} outerRadius={90}>
+                <Pie
+                  data={vm.jalur}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius={55}
+                  outerRadius={85}
+                  paddingAngle={2}
+                  cx="50%"
+                  cy="45%"
+                >
                   {vm.jalur.map((_, i) => (
                     <Cell key={i} fill={PIE_COLORS[i]} />
                   ))}
                 </Pie>
-                <Tooltip />
-                <Legend />
+
+                <Tooltip formatter={(v) => id(v)} labelFormatter={(label) => `Jalur: ${label}`} />
+
+                <Legend content={renderLegend} />
               </PieChart>
             </ResponsiveContainer>
           </div>
+
+          <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
+            Total: <b style={{ color: "#0f172a" }}>{id(vm.maba)}</b>
+          </div>
         </Card>
       </div>
+
+      {/* HIGHLIGHT ALERT */}
+      <Card title="Highlight & Alert" right={<Badge text="Monitoring" tone="warn" />}>
+        <div
+          style={{
+            display: "grid",
+            gap: 8,
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+          }}
+        >
+          {vm.highlight.map((h, i) => (
+            <div
+              key={i}
+              className="card"
+              style={{
+                borderRadius: 14,
+                padding: 10,
+                display: "grid",
+                gap: 6,
+                border: "1px solid #eef2f7",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <Badge text={h.badge} tone={h.tone} />
+                <span style={{ fontSize: 11, color: "#6b7280", fontWeight: 800 }}>Tahun {tahun}</span>
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 900 }}>{h.text}</div>
+            </div>
+          ))}
+        </div>
+      </Card>
 
       {/* QUICK ACTION */}
       <Card title="Akses Cepat">
@@ -203,7 +388,7 @@ export default function BerandaAkademik() {
           style={{
             display: "grid",
             gap: 12,
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
           }}
         >
           <QuickLinkCard title="Mahasiswa Aktif" desc="Distribusi & tren" to="/akademik/mahasiswa-aktif" icon="✅" />
