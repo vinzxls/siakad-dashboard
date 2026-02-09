@@ -2,20 +2,16 @@ import { useMemo, useState } from "react";
 import PelaporanKpi from "../../components/PelaporanKPI";
 import {
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
   BarChart,
   Bar,
   XAxis,
   YAxis,
   CartesianGrid,
+  Tooltip,
   LineChart,
   Line,
+  Legend,
 } from "recharts";
-
-const COLORS = ["#1e5aa8", "#60a5fa", "#93c5fd", "#bfdbfe", "#dbeafe"];
 
 /* ================== UTIL ================== */
 function formatID(n) {
@@ -26,35 +22,10 @@ function formatID(n) {
   }
 }
 
-function CustomTooltip({ active, payload, label }) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div
-      style={{
-        background: "#fff",
-        border: "1px solid #e5e7eb",
-        borderRadius: 12,
-        padding: 10,
-        boxShadow: "0 10px 20px rgba(0,0,0,0.08)",
-      }}
-    >
-      <div style={{ fontWeight: 900, marginBottom: 6 }}>{label}</div>
-      {payload.map((p, i) => (
-        <div
-          key={i}
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            gap: 14,
-            fontSize: 13,
-          }}
-        >
-          <span style={{ color: "#6b7280", fontWeight: 800 }}>{p.name}</span>
-          <span style={{ fontWeight: 900 }}>{formatID(p.value)}</span>
-        </div>
-      ))}
-    </div>
-  );
+function pct(part, total) {
+  const t = Math.max(1, Number(total) || 1);
+  const p = (Number(part) || 0) / t;
+  return `${Math.round(p * 100)}%`;
 }
 
 function Card({ title, right, children }) {
@@ -64,8 +35,8 @@ function Card({ title, right, children }) {
         style={{
           display: "flex",
           justifyContent: "space-between",
-          gap: 12,
           alignItems: "center",
+          gap: 12,
           flexWrap: "wrap",
         }}
       >
@@ -77,58 +48,80 @@ function Card({ title, right, children }) {
   );
 }
 
-function Donut({ data }) {
+function Badge({ text, tone = "info" }) {
+  const map = {
+    info: { bg: "#eff6ff", fg: "#1e5aa8" },
+    warn: { bg: "#fff7ed", fg: "#c2410c" },
+    ok: { bg: "#ecfdf5", fg: "#047857" },
+    danger: { bg: "#fef2f2", fg: "#b91c1c" },
+  };
+  const t = map[tone] ?? map.info;
   return (
-    <div style={{ height: 320 }}>
-      <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
-          <Pie
-            data={data}
-            dataKey="value"
-            nameKey="label"
-            innerRadius={80}
-            outerRadius={120}
-            paddingAngle={2}
+    <span
+      style={{
+        fontSize: 12,
+        fontWeight: 900,
+        padding: "6px 10px",
+        borderRadius: 999,
+        background: t.bg,
+        color: t.fg,
+        whiteSpace: "nowrap",
+      }}
+    >
+      {text}
+    </span>
+  );
+}
+
+/** Progress input nilai (Matkul total -> sudah input -> finalized) */
+function ProgressNilai({ totalMatkul, sudahInput, finalized }) {
+  const steps = [
+    { label: "Total MK", value: totalMatkul, tone: "info", hint: "Kelas aktif semester ini" },
+    { label: "Sudah Input Nilai", value: sudahInput, tone: "ok", hint: "Nilai sudah masuk" },
+    { label: "Finalisasi", value: finalized, tone: "warn", hint: "Nilai terkunci/final" },
+  ];
+
+  return (
+    <div style={{ display: "grid", gap: 10 }}>
+      {steps.map((s, i) => {
+        const w = Math.max(8, Math.round((s.value / Math.max(1, totalMatkul)) * 100));
+        const bar =
+          s.tone === "ok"
+            ? "rgba(4,120,87,0.18)"
+            : s.tone === "warn"
+            ? "rgba(194,65,12,0.18)"
+            : "rgba(30,90,168,0.18)";
+
+        return (
+          <div
+            key={s.label}
+            className="card"
+            style={{
+              borderRadius: 16,
+              padding: 12,
+              display: "grid",
+              gap: 8,
+              border: "1px solid #eef2f7",
+            }}
           >
-            {data.map((_, i) => (
-              <Cell key={i} fill={COLORS[i % COLORS.length]} />
-            ))}
-          </Pie>
-          <Tooltip content={<CustomTooltip />} />
-        </PieChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <Badge text={`${i + 1}. ${s.label}`} tone={s.tone} />
+                <span style={{ fontSize: 12, color: "#6b7280", fontWeight: 800 }}>
+                  {pct(s.value, totalMatkul)}
+                </span>
+              </div>
+              <div style={{ fontWeight: 900 }}>{formatID(s.value)}</div>
+            </div>
 
-function Bars({ data, xKey, yKey }) {
-  return (
-    <div style={{ height: 360 }}>
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 10, right: 16, left: 0, bottom: 50 }}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey={xKey} interval={0} tick={{ fontSize: 12 }} />
-          <YAxis tick={{ fontSize: 12 }} />
-          <Tooltip content={<CustomTooltip />} />
-          <Bar dataKey={yKey} name="Jumlah" fill="#1e5aa8" radius={[10, 10, 0, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
+            <div style={{ height: 10, background: "#f1f5f9", borderRadius: 999, overflow: "hidden" }}>
+              <div style={{ width: `${w}%`, height: "100%", background: bar }} />
+            </div>
 
-function Lines({ data, xKey, yKey, name = "Tren" }) {
-  return (
-    <div style={{ height: 320 }}>
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 10, right: 16, left: 0, bottom: 20 }}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey={xKey} tick={{ fontSize: 12 }} />
-          <YAxis tick={{ fontSize: 12 }} />
-          <Tooltip content={<CustomTooltip />} />
-          <Line type="monotone" dataKey={yKey} name={name} stroke="#1e5aa8" strokeWidth={3} dot={false} />
-        </LineChart>
-      </ResponsiveContainer>
+            <div style={{ fontSize: 12, color: "#6b7280", fontWeight: 800 }}>{s.hint}</div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -136,115 +129,128 @@ function Lines({ data, xKey, yKey, name = "Tren" }) {
 /* ================== PAGE ================== */
 export default function PelaporanMasaStudiIPK() {
   const [tahun, setTahun] = useState("2024");
-  const [fakultas, setFakultas] = useState("Semua");
+  const [scope, setScope] = useState("Fakultas"); // Fakultas / Prodi
 
-  const data = useMemo(() => {
-    const baseYear = tahun === "2025" ? 1.05 : tahun === "2024" ? 1 : 0.92;
+  const vm = useMemo(() => {
+    const base = tahun === "2025" ? 1.06 : tahun === "2024" ? 1 : 0.92;
 
-    const FAC_WEIGHT = {
-      Semua: 1,
-      Hukum: 0.22,
-      Teknik: 0.28,
-      Ekonomi: 0.24,
-      FISIP: 0.18,
-      Kedokteran: 0.08,
-    };
-    const facFactor = FAC_WEIGHT[fakultas] ?? 0.2;
+    // Penilaian akhir semester (dummy)
+    const totalMatkul = Math.round(1480 * base);
+    const sudahInput = Math.round(totalMatkul * (tahun === "2023" ? 0.72 : tahun === "2024" ? 0.81 : 0.88));
+    const belumInput = Math.max(0, totalMatkul - sudahInput);
 
-    // ===== KPI utama (dummy, tapi terasa beda per filter) =====
-    const lulusan = Math.round(3400 * baseYear * facFactor);
-    const tepatWaktu = Math.round(lulusan * (fakultas === "Kedokteran" ? 0.58 : 0.64));
-    const tidakTepatWaktu = Math.max(0, lulusan - tepatWaktu);
+    const finalized = Math.round(sudahInput * (tahun === "2023" ? 0.70 : tahun === "2024" ? 0.78 : 0.86));
+    const belumFinal = Math.max(0, sudahInput - finalized);
 
-    const ipkRata = Number(
-      (
-        3.18 +
-        (tahun === "2025" ? 0.03 : tahun === "2023" ? -0.02 : 0) +
-        (fakultas === "Teknik" ? -0.03 : fakultas === "Kedokteran" ? 0.04 : 0)
-      ).toFixed(2)
-    );
+    // IPS/hasil belajar
+    const ipsRata = (3.05 + (tahun === "2025" ? 0.07 : tahun === "2023" ? -0.05 : 0.02)).toFixed(2);
+    const ipkRata = (3.10 + (tahun === "2025" ? 0.06 : tahun === "2023" ? -0.04 : 0.02)).toFixed(2);
 
-    const masaStudiRata = Number(
-      (
-        4.4 +
-        (tahun === "2025" ? -0.05 : tahun === "2023" ? 0.08 : 0) +
-        (fakultas === "Teknik" ? 0.12 : fakultas === "Hukum" ? -0.05 : 0)
-      ).toFixed(2)
-    );
+    const mhsDinilai = Math.round(16800 * base);
+    const mhsBermasalah = Math.round(mhsDinilai * (tahun === "2023" ? 0.14 : tahun === "2024" ? 0.12 : 0.10)); // IPS<2.00 (dummy)
 
-    // ===== Donut: tepat vs tidak =====
-    const donutKelulusan = [
-      { label: "Tepat Waktu", value: tepatWaktu },
-      { label: "Tidak Tepat", value: tidakTepatWaktu },
-    ];
+    // Distribusi nilai A-E dibuat beda per tahun agar terlihat berubah
+    const dist = (() => {
+      if (tahun === "2025") return { A: 0.24, B: 0.36, C: 0.26, D: 0.10, E: 0.04 };
+      if (tahun === "2024") return { A: 0.22, B: 0.34, C: 0.28, D: 0.11, E: 0.05 };
+      return { A: 0.20, B: 0.32, C: 0.29, D: 0.12, E: 0.07 };
+    })();
 
-    // ===== Bar: distribusi IPK (dummy) =====
-    const ipkDist = [
-      { label: "< 2.00", value: Math.round(lulusan * 0.04) },
-      { label: "2.00 – 2.99", value: Math.round(lulusan * 0.30) },
-      { label: "3.00 – 3.49", value: Math.round(lulusan * 0.46) },
-      { label: "≥ 3.50", value: Math.round(lulusan * 0.20) },
-    ];
+    const totalNilai = Math.round(mhsDinilai * 6.5); // proxy jumlah nilai (dummy)
+    const nilaiA = Math.round(totalNilai * dist.A);
+    const nilaiB = Math.round(totalNilai * dist.B);
+    const nilaiC = Math.round(totalNilai * dist.C);
+    const nilaiD = Math.round(totalNilai * dist.D);
+    const nilaiE = Math.max(0, totalNilai - nilaiA - nilaiB - nilaiC - nilaiD);
 
-    // ===== Bar: distribusi masa studi (dummy) =====
-    const masaStudiDist = [
-      { label: "< 4 thn", value: Math.round(lulusan * 0.18) },
-      { label: "4 – 4.5", value: Math.round(lulusan * 0.34) },
-      { label: "4.5 – 5", value: Math.round(lulusan * 0.26) },
-      { label: "5 – 6", value: Math.round(lulusan * 0.16) },
-      { label: "> 6", value: Math.round(lulusan * 0.06) },
-    ];
+    const nilaiSummary = { A: nilaiA, B: nilaiB, C: nilaiC, D: nilaiD, E: nilaiE, total: totalNilai };
 
-    // ===== Line: tren IPK (dummy) =====
-    const trendIpk = ["2021", "2022", "2023", "2024", "2025"].map((y, i) => {
-      const base = 3.12 + i * 0.03;
-      const adj = fakultas === "Kedokteran" ? 0.05 : fakultas === "Teknik" ? -0.03 : 0;
-      return { year: y, value: Number((base + adj).toFixed(2)) };
-    });
+    // Tren IPS
+    const trenIps = [
+      { sem: "2023-1", v: 3.01 },
+      { sem: "2023-2", v: 3.04 },
+      { sem: "2024-1", v: 3.06 },
+      { sem: "2024-2", v: 3.09 },
+      { sem: "2025-1", v: 3.12 },
+    ].map((x) => ({
+      ...x,
+      v: Number((x.v + (tahun === "2023" ? -0.05 : tahun === "2025" ? 0.04 : 0)).toFixed(2)),
+    }));
 
-    // ===== Table: ringkas top prodi (dummy) =====
-    const topProdi = [
-      ["Teknik Informatika", 240],
-      ["Manajemen", 230],
-      ["Hukum", 210],
-      ["Ilmu Komunikasi", 190],
-      ["Akuntansi", 175],
-      ["PGSD", 160],
+    // Ranking alert (MK belum input) per fakultas / prodi
+    const rankingFakultas = [
+      { label: "FKIP", total: Math.round(320 * base), belum: Math.round(62 * base) },
+      { label: "FEB", total: Math.round(260 * base), belum: Math.round(55 * base) },
+      { label: "FT", total: Math.round(240 * base), belum: Math.round(51 * base) },
+      { label: "FH", total: Math.round(180 * base), belum: Math.round(38 * base) },
+      { label: "FISIP", total: Math.round(160 * base), belum: Math.round(34 * base) },
     ]
-      .map(([name, base]) => ({
-        name,
-        lulusan: Math.max(10, Math.round(base * baseYear * (0.65 + facFactor))),
-        ipk: Number((3.05 + (base % 7) * 0.05 + (fakultas === "Kedokteran" ? 0.05 : 0)).toFixed(2)),
-        masa: Number((4.2 + (base % 5) * 0.12 + (fakultas === "Teknik" ? 0.15 : 0)).toFixed(2)),
-      }))
-      .sort((a, b) => b.lulusan - a.lulusan);
+      .map((x) => ({ ...x, persen: Math.round((x.belum / Math.max(1, x.total)) * 100) }))
+      .sort((a, b) => b.persen - a.persen);
 
-    const table = fakultas === "Semua" ? topProdi : topProdi.slice(0, 4);
+    const rankingProdi = [
+      { label: "Teknik Informatika", total: Math.round(88 * base), belum: Math.round(22 * base) },
+      { label: "Manajemen", total: Math.round(82 * base), belum: Math.round(20 * base) },
+      { label: "Hukum", total: Math.round(74 * base), belum: Math.round(18 * base) },
+      { label: "Ilmu Komunikasi", total: Math.round(68 * base), belum: Math.round(16 * base) },
+      { label: "Akuntansi", total: Math.round(64 * base), belum: Math.round(15 * base) },
+      { label: "Keperawatan", total: Math.round(58 * base), belum: Math.round(14 * base) },
+    ]
+      .map((x) => ({ ...x, persen: Math.round((x.belum / Math.max(1, x.total)) * 100) }))
+      .sort((a, b) => b.persen - a.persen);
+
+    const ranking = scope === "Prodi" ? rankingProdi : rankingFakultas;
+
+    // Tabel contoh: MK belum input nilai (dummy)
+    const pending = ranking.slice(0, 5).map((r, idx) => ({
+      mk: idx % 2 === 0 ? "Statistika" : "Metodologi Penelitian",
+      unit: r.label,
+      kelas: `Kelas ${String.fromCharCode(65 + idx)}`,
+      peserta: Math.round((35 + idx * 6) * base),
+      status: "Belum input nilai",
+    }));
 
     return {
-      lulusan,
-      tepatWaktu,
-      tidakTepatWaktu,
+      totalMatkul,
+      sudahInput,
+      belumInput,
+      finalized,
+      belumFinal,
+      ipsRata,
       ipkRata,
-      masaStudiRata,
-      donutKelulusan,
-      ipkDist,
-      masaStudiDist,
-      trendIpk,
-      table,
+      mhsDinilai,
+      mhsBermasalah,
+      nilaiSummary,
+      trenIps,
+      ranking,
+      pending,
     };
-  }, [tahun, fakultas]);
+  }, [tahun, scope]);
+
+  // warna grade (match biru-putih, dengan aksen untuk D/E)
+  const GRADE_COLORS = {
+    A: "#1e5aa8",
+    B: "#60a5fa",
+    C: "#93c5fd",
+    D: "#f59e0b",
+    E: "#ef4444",
+  };
+
+  const riskTone = vm.mhsBermasalah > vm.mhsDinilai * 0.12 ? "warn" : "info";
+  const inputTone = vm.belumInput > vm.totalMatkul * 0.2 ? "warn" : "ok";
+
+  const scopeLabel = scope === "Prodi" ? "Program Studi" : "Fakultas";
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
-      {/* HEADER + FILTER */}
+      {/* HEADER */}
       <div className="card" style={{ borderRadius: 18 }}>
         <div style={{ fontSize: 20, fontWeight: 900 }}>Pelaporan – Checkpoint 2</div>
         <div style={{ fontSize: 13, color: "#6b7280" }}>
-          Ringkasan masa studi, IPK, dan kelulusan (placeholder).
+          Penilaian akhir semester: progres input nilai, distribusi nilai, dan ringkasan IPS/IPK (placeholder).
         </div>
 
-        <div style={{ marginTop: 12, display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <div style={{ marginTop: 12, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
           <label style={{ fontSize: 13, color: "#6b7280", fontWeight: 800 }}>
             Tahun
             <select
@@ -267,10 +273,10 @@ export default function PelaporanMasaStudiIPK() {
           </label>
 
           <label style={{ fontSize: 13, color: "#6b7280", fontWeight: 800 }}>
-            Fakultas
+            Monitoring
             <select
-              value={fakultas}
-              onChange={(e) => setFakultas(e.target.value)}
+              value={scope}
+              onChange={(e) => setScope(e.target.value)}
               style={{
                 marginLeft: 10,
                 padding: "10px 12px",
@@ -281,96 +287,180 @@ export default function PelaporanMasaStudiIPK() {
                 fontWeight: 800,
               }}
             >
-              <option value="Semua">Semua</option>
-              <option value="Hukum">Hukum</option>
-              <option value="Teknik">Teknik</option>
-              <option value="Ekonomi">Ekonomi</option>
-              <option value="FISIP">FISIP</option>
-              <option value="Kedokteran">Kedokteran</option>
+              <option value="Fakultas">Fakultas</option>
+              <option value="Prodi">Prodi</option>
             </select>
           </label>
+
+          <Badge text={`Nilai belum input: ${pct(vm.belumInput, vm.totalMatkul)}`} tone={inputTone} />
+          <Badge text={`Mahasiswa berisiko: ${pct(vm.mhsBermasalah, vm.mhsDinilai)}`} tone={riskTone} />
         </div>
       </div>
 
-      {/* MAIN GRID */}
-      <div style={{ display: "grid", gap: 16, gridTemplateColumns: "1.6fr 0.9fr", alignItems: "start" }}>
+      {/* MAIN */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1.6fr 0.9fr",
+          gap: 16,
+          alignItems: "start",
+        }}
+      >
         {/* LEFT */}
         <div style={{ display: "grid", gap: 16 }}>
-          <div style={{ display: "grid", gap: 16, gridTemplateColumns: "1fr 1fr" }}>
-            <Card title="Tepat Waktu vs Tidak Tepat Waktu">
-              <Donut data={data.donutKelulusan} />
-            </Card>
+          <Card title="Progress Input Nilai (Akhir Semester)">
+            <ProgressNilai totalMatkul={vm.totalMatkul} sudahInput={vm.sudahInput} finalized={vm.finalized} />
+          </Card>
 
-            <Card title="Distribusi IPK (Lulusan)">
-              <Bars data={data.ipkDist} xKey="label" yKey="value" />
-            </Card>
-          </div>
+          <Card
+            title="Distribusi Nilai (A–E)"
+            right={<span style={{ fontSize: 12, color: "#6b7280", fontWeight: 900 }}>Total: {formatID(vm.nilaiSummary.total)}</span>}
+          >
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart data={[vm.nilaiSummary]} barCategoryGap={20} margin={{ left: 0, right: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey={() => "Distribusi"} />
+                <YAxis />
+                <Tooltip
+                  formatter={(v, name) => [formatID(v), `Nilai ${name}`]}
+                  labelFormatter={() => `Tahun ${tahun}`}
+                />
+                <Legend />
+                <Bar dataKey="A" stackId="g" fill={GRADE_COLORS.A} radius={[10, 10, 0, 0]} />
+                <Bar dataKey="B" stackId="g" fill={GRADE_COLORS.B} />
+                <Bar dataKey="C" stackId="g" fill={GRADE_COLORS.C} />
+                <Bar dataKey="D" stackId="g" fill={GRADE_COLORS.D} />
+                <Bar dataKey="E" stackId="g" fill={GRADE_COLORS.E} />
+              </BarChart>
+            </ResponsiveContainer>
 
-          <div style={{ display: "grid", gap: 16, gridTemplateColumns: "1fr 1fr" }}>
-            <Card title="Distribusi Masa Studi (Tahun)">
-              <Bars data={data.masaStudiDist} xKey="label" yKey="value" />
-            </Card>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, minmax(120px, 1fr))", gap: 10 }}>
+              {["A", "B", "C", "D", "E"].map((g) => (
+                <div
+                  key={g}
+                  className="card"
+                  style={{
+                    borderRadius: 14,
+                    padding: 10,
+                    border: "1px solid #eef2f7",
+                    display: "grid",
+                    gap: 4,
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontWeight: 1000, color: "#0f172a" }}>Nilai {g}</span>
+                    <span style={{ width: 10, height: 10, borderRadius: 3, background: GRADE_COLORS[g] }} />
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 900 }}>{formatID(vm.nilaiSummary[g])}</div>
+                  <div style={{ fontSize: 12, color: "#6b7280", fontWeight: 800 }}>
+                    {pct(vm.nilaiSummary[g], vm.nilaiSummary.total)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
 
-            <Card title="Tren IPK Rata-rata">
-              <Lines data={data.trendIpk} xKey="year" yKey="value" name="IPK" />
-            </Card>
-          </div>
+          <Card title="Tren IPS Rata-rata (Multi Semester)">
+            <ResponsiveContainer width="100%" height={280}>
+              <LineChart data={vm.trenIps}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="sem" />
+                <YAxis domain={[2.0, 4.0]} />
+                <Tooltip formatter={(v) => v} />
+                <Line dataKey="v" stroke="#1e5aa8" strokeWidth={3} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </Card>
 
-          <Card title="Tabel Ringkas Top Prodi (Dummy)">
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+          <Card title={`Ranking ${scopeLabel}: MK Belum Input Nilai`} right={<Badge text="Butuh tindak lanjut" tone="warn" />}>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={vm.ranking} barCategoryGap={18} margin={{ left: 0, right: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="label" tick={{ fontSize: 12 }} />
+                <YAxis />
+                <Tooltip
+                  formatter={(v, name) => {
+                    if (name === "belum") return [formatID(v), "Belum input nilai"];
+                    if (name === "total") return [formatID(v), "Total MK"];
+                    return [formatID(v), name];
+                  }}
+                />
+                <Bar dataKey="belum" fill="#f59e0b" radius={[10, 10, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, marginTop: 6 }}>
               <thead>
                 <tr style={{ textAlign: "left", color: "#6b7280" }}>
-                  <th style={{ padding: "10px 0" }}>Prodi</th>
-                  <th style={{ padding: "10px 0" }}>Lulusan</th>
-                  <th style={{ padding: "10px 0" }}>IPK</th>
-                  <th style={{ padding: "10px 0" }}>Masa Studi</th>
+                  <th style={{ padding: "10px 0" }}>{scopeLabel}</th>
+                  <th style={{ padding: "10px 0" }}>Total MK</th>
+                  <th style={{ padding: "10px 0" }}>Belum Input</th>
+                  <th style={{ padding: "10px 0" }}>%</th>
                 </tr>
               </thead>
               <tbody>
-                {data.table.map((r) => (
-                  <tr key={r.name}>
+                {vm.ranking.map((r) => (
+                  <tr key={r.label}>
+                    <td style={{ padding: "10px 0", borderTop: "1px solid #f1f5f9", fontWeight: 900 }}>{r.label}</td>
+                    <td style={{ padding: "10px 0", borderTop: "1px solid #f1f5f9", fontWeight: 900 }}>{formatID(r.total)}</td>
+                    <td style={{ padding: "10px 0", borderTop: "1px solid #f1f5f9", fontWeight: 900 }}>{formatID(r.belum)}</td>
+                    <td style={{ padding: "10px 0", borderTop: "1px solid #f1f5f9", fontWeight: 900 }}>{r.persen}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Card>
+
+          <Card title="Tindak Lanjut: Contoh MK Belum Input Nilai">
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <thead>
+                <tr style={{ textAlign: "left", color: "#6b7280" }}>
+                  <th style={{ padding: "10px 0" }}>Mata Kuliah</th>
+                  <th style={{ padding: "10px 0" }}>{scopeLabel}</th>
+                  <th style={{ padding: "10px 0" }}>Kelas</th>
+                  <th style={{ padding: "10px 0" }}>Peserta</th>
+                  <th style={{ padding: "10px 0" }}>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {vm.pending.map((r, i) => (
+                  <tr key={i}>
+                    <td style={{ padding: "10px 0", borderTop: "1px solid #f1f5f9", fontWeight: 900 }}>{r.mk}</td>
+                    <td style={{ padding: "10px 0", borderTop: "1px solid #f1f5f9", fontWeight: 900 }}>{r.unit}</td>
+                    <td style={{ padding: "10px 0", borderTop: "1px solid #f1f5f9", fontWeight: 900 }}>{r.kelas}</td>
+                    <td style={{ padding: "10px 0", borderTop: "1px solid #f1f5f9", fontWeight: 900 }}>{formatID(r.peserta)}</td>
                     <td style={{ padding: "10px 0", borderTop: "1px solid #f1f5f9", fontWeight: 900 }}>
-                      {r.name}
-                    </td>
-                    <td style={{ padding: "10px 0", borderTop: "1px solid #f1f5f9", fontWeight: 900 }}>
-                      {formatID(r.lulusan)}
-                    </td>
-                    <td style={{ padding: "10px 0", borderTop: "1px solid #f1f5f9", fontWeight: 900 }}>
-                      {r.ipk.toFixed(2)}
-                    </td>
-                    <td style={{ padding: "10px 0", borderTop: "1px solid #f1f5f9", fontWeight: 900 }}>
-                      {r.masa.toFixed(2)} thn
+                      <Badge text={r.status} tone="warn" />
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
 
-            <div style={{ marginTop: 10, fontSize: 12, color: "#6b7280" }}>
-              *Placeholder — nanti diganti API SIAKAD.
+            <div style={{ fontSize: 12, color: "#6b7280", marginTop: 8 }}>
+              *Placeholder — nanti sumbernya dari status input nilai SIAKAD.
             </div>
           </Card>
         </div>
 
-        {/* RIGHT KPI (COMPACT ✅) */}
+        {/* RIGHT KPI */}
         <div style={{ display: "grid", gap: 12 }}>
-          <PelaporanKpi title="Total Lulusan" value={formatID(data.lulusan)} subtitle={`Tahun ${tahun}`} />
-          <PelaporanKpi
-            title="Tepat Waktu"
-            value={formatID(data.tepatWaktu)}
-            subtitle={`${Math.round((data.tepatWaktu / Math.max(1, data.lulusan)) * 100)}% dari lulusan`}
-          />
-          <PelaporanKpi title="IPK Rata-rata" value={data.ipkRata.toFixed(2)} subtitle="Rata-rata lulusan (dummy)" />
-          <PelaporanKpi title="Masa Studi Rata-rata" value={`${data.masaStudiRata.toFixed(2)} thn`} subtitle="Estimasi masa studi" />
+          <PelaporanKpi title="Total Mata Kuliah" value={formatID(vm.totalMatkul)} subtitle={`Tahun ${tahun}`} />
+          <PelaporanKpi title="Sudah Input Nilai" value={formatID(vm.sudahInput)} subtitle={`${pct(vm.sudahInput, vm.totalMatkul)} dari total`} />
+          <PelaporanKpi title="Belum Input Nilai" value={formatID(vm.belumInput)} subtitle="Prioritas monitoring" />
 
-          <div className="card" style={{ borderRadius: 18, padding: 14 }}>
-            <div style={{ fontWeight: 900, fontSize: 15, marginBottom: 8 }}>Catatan</div>
-            <ul style={{ margin: 0, paddingLeft: 18, color: "#6b7280", display: "grid", gap: 6, fontSize: 12 }}>
-              <li>Checkpoint 2 fokus IPK & masa studi.</li>
-              <li>Filter mempengaruhi KPI & chart.</li>
-              <li>Data dummy → siap mapping API.</li>
-            </ul>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <PelaporanKpi title="Finalisasi Nilai" value={formatID(vm.finalized)} subtitle={`${pct(vm.finalized, vm.sudahInput)} dari sudah input`} />
+            <PelaporanKpi title="Belum Final" value={formatID(vm.belumFinal)} subtitle="Proses berjalan" />
           </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <PelaporanKpi title="IPS Rata-rata" value={vm.ipsRata} subtitle="Semester berjalan" />
+            <PelaporanKpi title="IPK Rata-rata" value={vm.ipkRata} subtitle="Akumulatif (opsional)" />
+          </div>
+
+          <PelaporanKpi title="Mahasiswa Dinilai" value={formatID(vm.mhsDinilai)} subtitle="Populasi penilaian" />
+          <PelaporanKpi title="Mahasiswa Berisiko" value={formatID(vm.mhsBermasalah)} subtitle="IPS < 2.00 (dummy)" />
         </div>
       </div>
     </div>
