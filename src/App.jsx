@@ -8,8 +8,8 @@ import MahasiswaAktif from "./pages/MahasiswaAktif";
 import MahasiswaBaru from "./pages/MahasiswaBaru";
 import Lulusan from "./pages/Lulusan";
 
-import PelaporanMahasiswaTahun from "./pages/pelaporanx/PelaporanMahasiswaTahun";
-import PelaporanMasaStudiIPK from "./pages/pelaporanx/PelaporanMasaStudiIPK";
+import PelaporanMahasiswaTahun from "./pages/pelaporan/PelaporanMahasiswaTahun";
+import PelaporanMasaStudiIPK from "./pages/pelaporan/PelaporanMasaStudiIPK";
 
 export default function App() {
   return (
