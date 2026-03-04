@@ -1,50 +1,91 @@
 import { useNavigate } from "react-router-dom";
 import unpattiLogo from "../assets/unpatti-logo.png";
+import "../styles/unpatti.css";
 
-function Card({ title, desc, onClick, color }) {
+const MODULES = [
+  {
+    title: "Akademik",
+    desc: "Mahasiswa aktif, mahasiswa baru, lulusan, pelaporan, dan data akademik lainnya.",
+    icon: "🏛️",
+    bg: "linear-gradient(135deg, #1e5aa8, #3b82f6)",
+    to: "/akademik/beranda",
+  },
+  {
+    title: "SDM",
+    desc: "Statistik dosen dan tenaga kependidikan (segera hadir).",
+    icon: "👥",
+    bg: "linear-gradient(135deg, #047857, #34d399)",
+    to: "/sdm",
+  },
+  {
+    title: "Beasiswa",
+    desc: "Ringkasan penerima beasiswa dan bantuan pendidikan (segera hadir).",
+    icon: "🎓",
+    bg: "linear-gradient(135deg, #7c3aed, #a78bfa)",
+    to: "/beasiswa",
+  },
+  {
+    title: "Akreditasi",
+    desc: "Status akreditasi program studi dan institusi (segera hadir).",
+    icon: "✅",
+    bg: "linear-gradient(135deg, #b45309, #fbbf24)",
+    to: "/akreditasi",
+  },
+  {
+    title: "Keuangan",
+    desc: "Ringkasan laporan dan statistik keuangan (segera hadir).",
+    icon: "💰",
+    bg: "linear-gradient(135deg, #15803d, #4ade80)",
+    to: "/keuangan",
+  },
+];
+
+function Card({ title, desc, icon, bg, onClick }) {
   return (
     <button
       onClick={onClick}
       type="button"
-      className="home-card"
       style={{
-        // biar tinggi sejajar + rapi
-        minHeight: 260,
+        background: "#fff",
+        border: "1px solid #e2e8f0",
+        borderRadius: 16,
+        padding: 20,
+        textAlign: "left",
+        cursor: "pointer",
+        display: "flex",
+        flexDirection: "column",
+        gap: 12,
+        minHeight: 220,
+        boxShadow: "0 4px 16px rgba(15,23,42,0.07)",
+        transition: "transform 150ms, box-shadow 150ms",
+        position: "relative",
+        overflow: "hidden",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "translateY(-4px)";
+        e.currentTarget.style.boxShadow = "0 12px 32px rgba(15,23,42,0.12)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "none";
+        e.currentTarget.style.boxShadow = "0 4px 16px rgba(15,23,42,0.07)";
       }}
     >
-      {/* ICON + TITLE */}
-      <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
         <div
-          className="home-card-icon"
           style={{
-            background: color.bg,
-            borderColor: "rgba(30, 90, 168, 0.18)",
-            color: color.fg,
+            width: 44, height: 44, borderRadius: 12,
+            display: "grid", placeItems: "center",
+            background: bg, fontSize: 20, color: "#fff",
           }}
         >
-          {color.icon}
+          {icon}
         </div>
-
-        <div style={{ fontSize: 22, fontWeight: 900 }}>{title}</div>
+        <div style={{ fontSize: 18, fontWeight: 900, color: "#0f172a" }}>{title}</div>
       </div>
-
-      {/* DESCRIPTION (maks 3 baris) */}
-      <div
-        style={{
-          color: "#475569",
-          fontSize: 14,
-          lineHeight: 1.6,
-          overflow: "hidden",
-          display: "-webkit-box",
-          WebkitLineClamp: 3,
-          WebkitBoxOrient: "vertical",
-        }}
-      >
+      <div style={{ color: "#64748b", fontSize: 13, lineHeight: 1.6, flex: 1 }}>
         {desc}
       </div>
-
-      {/* CTA nempel bawah */}
-      <div className="home-card-cta" style={{ color: color.fg }}>
+      <div style={{ fontWeight: 800, color: "#1e5aa8", fontSize: 13 }}>
         Buka Modul →
       </div>
     </button>
@@ -55,125 +96,44 @@ export default function DashboardHome() {
   const navigate = useNavigate();
 
   return (
-    <div style={{ width: "100%" }}>
-      {/* FULL WIDTH HEADER */}
+    <div style={{ minHeight: "100vh", background: "#eef2f7" }}>
+      {/* Header */}
       <div
         style={{
-          width: "100%",
-          background:
-            "linear-gradient(90deg, rgba(30,90,168,0.20), rgba(96,165,250,0.18))",
-          padding: "36px 0",
+          background: "linear-gradient(135deg, #0b2545, #1e5aa8, #60a5fa)",
+          padding: "48px 20px",
+          textAlign: "center",
+          color: "#fff",
         }}
       >
-        <div
-          style={{
-            maxWidth: 1300,
-            margin: "0 auto",
-            padding: "0 16px",
-            display: "flex",
-            gap: 18,
-            alignItems: "center",
-          }}
-        >
-          <img
-            src={unpattiLogo}
-            alt="UNPATTI"
-            style={{ width: 72, height: 72, objectFit: "contain" }}
-          />
-
-          <div>
-            <div style={{ fontSize: 34, fontWeight: 900 }}>
+        <div style={{ display: "flex", justifyContent: "center", gap: 16, alignItems: "center", marginBottom: 12 }}>
+          <img src={unpattiLogo} alt="UNPATTI" style={{ width: 64, height: 64, objectFit: "contain" }} />
+          <div style={{ textAlign: "left" }}>
+            <div style={{ fontSize: 30, fontWeight: 900, letterSpacing: 0.5 }}>
               Dashboard Warehouse UNPATTI
             </div>
-            <div style={{ fontSize: 16, color: "#475569", marginTop: 6 }}>
-              Pusat visualisasi data universitas untuk monitoring dan pengambilan
-              keputusan.
+            <div style={{ fontSize: 14, opacity: 0.9 }}>
+              Pusat visualisasi data universitas untuk monitoring dan pengambilan keputusan.
             </div>
           </div>
         </div>
       </div>
 
-      {/* GRID MENU - 5 SEJAJAR DI TENGAH */}
+      {/* Cards Grid */}
       <div
-        className="home-grid"
         style={{
-          maxWidth: 1320,
+          maxWidth: 1200,
           margin: "32px auto 0",
-          padding: "0 16px",
+          padding: "0 20px 40px",
           display: "grid",
-          justifyContent: "center",
-          gridTemplateColumns: "repeat(5, minmax(220px, 1fr))",
-          gap: 24,
+          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+          gap: 20,
         }}
       >
-        <Card
-          title="Akademik"
-          desc="Mahasiswa aktif, mahasiswa baru, SNBP, SNBT, Mandiri, lulusan, dan pelaporan akademik."
-          color={{
-            bg: "rgba(30,90,168,0.12)",
-            fg: "#1e5aa8",
-            icon: "🏛️",
-          }}
-          onClick={() => navigate("/akademik/beranda")}
-        />
-
-        <Card
-          title="SDM"
-          desc="Statistik dosen dan tenaga kependidikan (placeholder)."
-          color={{
-            bg: "rgba(16,185,129,0.12)",
-            fg: "#047857",
-            icon: "👥",
-          }}
-          onClick={() => navigate("/sdm")}
-        />
-
-        <Card
-          title="Beasiswa"
-          desc="Ringkasan penerima beasiswa dan bantuan pendidikan (placeholder)."
-          color={{
-            bg: "rgba(168,85,247,0.12)",
-            fg: "#7c3aed",
-            icon: "🎓",
-          }}
-          onClick={() => navigate("/beasiswa")}
-        />
-
-        <Card
-          title="Akreditasi"
-          desc="Status akreditasi program studi dan institusi (placeholder)."
-          color={{
-            bg: "rgba(234,88,12,0.12)",
-            fg: "#c2410c",
-            icon: "✅",
-          }}
-          onClick={() => navigate("/akreditasi")}
-        />
-
-        <Card
-          title="Keuangan"
-          desc="Ringkasan laporan dan statistik keuangan (placeholder)."
-          color={{
-            bg: "rgba(34,197,94,0.12)",
-            fg: "#15803d",
-            icon: "💰",
-          }}
-          onClick={() => navigate("/keuangan")}
-        />
+        {MODULES.map((m) => (
+          <Card key={m.title} {...m} onClick={() => navigate(m.to)} />
+        ))}
       </div>
-
-      {/* RESPONSIVE */}
-      <style>{`
-        @media (max-width: 1300px) {
-          .home-grid { grid-template-columns: repeat(3, minmax(220px, 1fr)) !important; }
-        }
-        @media (max-width: 900px) {
-          .home-grid { grid-template-columns: repeat(2, minmax(220px, 1fr)) !important; }
-        }
-        @media (max-width: 560px) {
-          .home-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
     </div>
   );
 }

@@ -1,152 +1,93 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { useState } from "react";
+import { FiHome, FiUsers, FiUserCheck, FiFileText, FiChevronDown, FiChevronRight, FiLogOut } from "react-icons/fi";
 import unpattiLogo from "../assets/unpatti-logo.png";
 
 export default function Sidebar() {
-  const [openMahasiswa, setOpenMahasiswa] = useState(true);
-  const [openPelaporan, setOpenPelaporan] = useState(true);
+  const { pathname } = useLocation();
+  const [openMhs, setOpenMhs] = useState(pathname.includes("/mahasiswa-aktif") || pathname.includes("/mahasiswa-baru"));
+  const [openKeluar, setOpenKeluar] = useState(pathname.includes("/mahasiswa-keluar"));
+  const [openPelaporan, setOpenPelaporan] = useState(pathname.includes("/pelaporan"));
 
-  const mainLink = ({ isActive }) => ({
-    padding: "10px 12px",
-    borderRadius: 12,
-    textDecoration: "none",
-    fontWeight: 900,
-    fontSize: 15,
-    lineHeight: 1.2,
-    color: isActive ? "#fff" : "#0f172a",
-    background: isActive ? "#1e5aa8" : "transparent",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    minHeight: 44,
-  });
-
-  const groupBtn = {
-    padding: "10px 12px",
-    borderRadius: 12,
-    border: "none",
-    background: "transparent",
-    cursor: "pointer",
-    fontWeight: 900,
-    fontSize: 15,
-    lineHeight: 1.2,
-    color: "#0f172a",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    minHeight: 44,
-    width: "100%",
-  };
-
-  const subLink = ({ isActive }) => ({
-    padding: "8px 12px 8px 34px",
-    borderRadius: 12,
-    textDecoration: "none",
-    fontWeight: 800,
-    fontSize: 14,
-    lineHeight: 1.2,
-    color: isActive ? "#1e5aa8" : "#334155",
-    background: isActive ? "rgba(30,90,168,0.10)" : "transparent",
-    display: "block",
-    minHeight: 38,
-  });
-
-  const caret = (open) => (
-    <span style={{ fontSize: 12, opacity: 0.7 }}>{open ? "▾" : "▸"}</span>
-  );
+  const item = ({ isActive }) =>
+    `u-menu__item${isActive ? " active" : ""}`;
 
   return (
-    <aside
-      style={{
-        width: 280,
-        minHeight: "100vh",
-        background: "#fff",
-        borderRight: "1px solid #e5e7eb",
-        display: "grid",
-        gridTemplateRows: "auto 1fr auto",
-      }}
-    >
-      {/* Header */}
-      <div style={{ padding: 14, borderBottom: "1px solid #e5e7eb" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div
-            style={{
-              width: 52,
-              height: 52,
-              borderRadius: 14,
-              background: "rgba(30,90,168,0.10)",
-              display: "grid",
-              placeItems: "center",
-              border: "1px solid rgba(30,90,168,0.20)",
-            }}
-          >
-            <img
-              src={unpattiLogo}
-              alt="UNPATTI"
-              style={{ width: 44, height: 44, objectFit: "contain" }}
-            />
-          </div>
-          <div style={{ display: "grid", gap: 2 }}>
-            <div style={{ fontWeight: 1000, fontSize: 14, color: "#0f172a" }}>
-              UNIVERSITAS PATTIMURA
-            </div>
-            <div style={{ fontWeight: 900, fontSize: 12, color: "#64748b" }}>
-              AMBON
-            </div>
-          </div>
+    <aside className="u-sidebar">
+      {/* Logo */}
+      <div className="u-sidebar__logo">
+        <img src={unpattiLogo} alt="UNPATTI" />
+        <div className="u-sidebar__logo-text">
+          <strong>Universitas Pattimura</strong>
+          <span>Ambon, Maluku</span>
         </div>
       </div>
 
       {/* Menu */}
-      <nav style={{ padding: 12, display: "grid", gap: 4, alignContent: "start" }}>
+      <nav className="u-menu">
+        <div className="u-menu__label">Menu Utama</div>
+
         {/* Beranda */}
-        <NavLink to="/akademik/beranda" style={mainLink}>
-          <span>Beranda</span>
+        <NavLink to="/akademik/beranda" className={item}>
+          <span className="icon"><FiHome /></span>
+          Beranda
         </NavLink>
 
-        {/* Mahasiswa dropdown */}
+        {/* Mahasiswa */}
         <button
           type="button"
-          style={groupBtn}
-          onClick={() => setOpenMahasiswa((v) => !v)}
+          className="u-menu__toggle"
+          onClick={() => setOpenMhs(v => !v)}
         >
-          <span>Mahasiswa</span>
-          {caret(openMahasiswa)}
+          <span className="icon"><FiUsers /></span>
+          Mahasiswa
+          <span className="caret">{openMhs ? <FiChevronDown /> : <FiChevronRight />}</span>
         </button>
-
-        {openMahasiswa && (
-          <div style={{ display: "grid", gap: 3, marginTop: 2, marginBottom: 6 }}>
-            <NavLink to="/akademik/mahasiswa-aktif" style={subLink}>
+        {openMhs && (
+          <div className="u-menu__sub">
+            <NavLink to="/akademik/mahasiswa-aktif" className={item}>
               Mahasiswa Aktif
             </NavLink>
-
-            {/* ✅ hanya 1 route Mahasiswa Baru */}
-            <NavLink to="/akademik/mahasiswa-baru" style={subLink}>
+            <NavLink to="/akademik/mahasiswa-baru" className={item}>
               Mahasiswa Baru
             </NavLink>
           </div>
         )}
 
-        <NavLink to="/akademik/lulusan" style={mainLink}>
-          Lulusan
-        </NavLink>
-
-        {/* Pelaporan dropdown */}
+        {/* Mahasiswa Keluar */}
         <button
           type="button"
-          style={groupBtn}
-          onClick={() => setOpenPelaporan((v) => !v)}
+          className="u-menu__toggle"
+          onClick={() => setOpenKeluar(v => !v)}
         >
-          <span>Pelaporan</span>
-          {caret(openPelaporan)}
+          <span className="icon"><FiLogOut /></span>
+          Mahasiswa Keluar
+          <span className="caret">{openKeluar ? <FiChevronDown /> : <FiChevronRight />}</span>
         </button>
+        {openKeluar && (
+          <div className="u-menu__sub">
+            <NavLink to="/akademik/mahasiswa-keluar" className={item}>
+              Lulusan & Status Keluar
+            </NavLink>
+          </div>
+        )}
 
+        {/* Pelaporan */}
+        <button
+          type="button"
+          className="u-menu__toggle"
+          onClick={() => setOpenPelaporan(v => !v)}
+        >
+          <span className="icon"><FiFileText /></span>
+          Pelaporan
+          <span className="caret">{openPelaporan ? <FiChevronDown /> : <FiChevronRight />}</span>
+        </button>
         {openPelaporan && (
-          <div style={{ display: "grid", gap: 3, marginTop: 2, marginBottom: 6 }}>
-            <NavLink to="/akademik/pelaporan/checkpoint-1" style={subLink}>
+          <div className="u-menu__sub">
+            <NavLink to="/akademik/pelaporan/checkpoint-1" className={item}>
               Checkpoint 1
             </NavLink>
-            <NavLink to="/akademik/pelaporan/checkpoint-2" style={subLink}>
+            <NavLink to="/akademik/pelaporan/checkpoint-2" className={item}>
               Checkpoint 2
             </NavLink>
           </div>
@@ -154,15 +95,7 @@ export default function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div
-        style={{
-          padding: 14,
-          borderTop: "1px solid #e5e7eb",
-          color: "#64748b",
-          fontSize: 12,
-          fontWeight: 800,
-        }}
-      >
+      <div className="u-sidebar__footer">
         Universitas Pattimura © 2026
       </div>
     </aside>

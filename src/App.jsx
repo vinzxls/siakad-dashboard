@@ -6,10 +6,10 @@ import AkademikLayout from "./layouts/AkademikLayout";
 import Beranda from "./pages/Beranda";
 import MahasiswaAktif from "./pages/MahasiswaAktif";
 import MahasiswaBaru from "./pages/MahasiswaBaru";
-import Lulusan from "./pages/Lulusan";
+import MahasiswaKeluar from "./pages/MahasiswaKeluar";
 
-import PelaporanMahasiswaTahun from "./pages/pelaporanx/PelaporanMahasiswaTahun";
-import PelaporanMasaStudiIPK from "./pages/pelaporanx/PelaporanMasaStudiIPK";
+import PelaporanCP1 from "./pages/pelaporanx/PelaporanMahasiswaTahun";
+import PelaporanCP2 from "./pages/pelaporanx/PelaporanMasaStudiIPK";
 
 export default function App() {
   return (
@@ -21,22 +21,19 @@ export default function App() {
         <Route path="beranda" element={<Beranda />} />
         <Route path="mahasiswa-aktif" element={<MahasiswaAktif />} />
         <Route path="mahasiswa-baru" element={<MahasiswaBaru />} />
-
-        {/* redirect route lama */}
-        <Route path="snbp" element={<Navigate to="/akademik/mahasiswa-baru" replace />} />
-        <Route path="snbt" element={<Navigate to="/akademik/mahasiswa-baru" replace />} />
-        <Route path="mandiri" element={<Navigate to="/akademik/mahasiswa-baru" replace />} />
-        <Route path="mandiri-rpl" element={<Navigate to="/akademik/mahasiswa-baru" replace />} />
-        <Route path="prestasi" element={<Navigate to="/akademik/mahasiswa-baru" replace />} />
-        <Route path="afirmasi" element={<Navigate to="/akademik/mahasiswa-baru" replace />} />
-
-        <Route path="lulusan" element={<Lulusan />} />
+        <Route path="mahasiswa-keluar" element={<MahasiswaKeluar />} />
 
         <Route path="pelaporan">
           <Route index element={<Navigate to="checkpoint-1" replace />} />
-          <Route path="checkpoint-1" element={<PelaporanMahasiswaTahun />} />
-          <Route path="checkpoint-2" element={<PelaporanMasaStudiIPK />} />
+          <Route path="checkpoint-1" element={<PelaporanCP1 />} />
+          <Route path="checkpoint-2" element={<PelaporanCP2 />} />
         </Route>
+
+        {/* Legacy redirects */}
+        <Route path="lulusan" element={<Navigate to="/akademik/mahasiswa-keluar" replace />} />
+        <Route path="snbp" element={<Navigate to="/akademik/mahasiswa-baru" replace />} />
+        <Route path="snbt" element={<Navigate to="/akademik/mahasiswa-baru" replace />} />
+        <Route path="mandiri" element={<Navigate to="/akademik/mahasiswa-baru" replace />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

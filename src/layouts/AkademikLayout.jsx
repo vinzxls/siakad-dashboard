@@ -5,11 +5,11 @@ import "../styles/unpatti.css";
 
 export default function AkademikLayout() {
   return (
-    <div className="unpatti-app">
+    <div className="u-app">
       <Sidebar />
-      <div className="unpatti-content">
+      <div className="u-content">
         <Topbar />
-        <div className="unpatti-main">
+        <div className="u-main">
           <Outlet />
         </div>
       </div>

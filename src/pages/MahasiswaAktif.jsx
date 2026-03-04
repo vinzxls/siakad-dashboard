@@ -1,606 +1,322 @@
 import { useMemo, useState } from "react";
 import {
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  Legend,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  LineChart,
-  Line,
+  ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line,
 } from "recharts";
 
-/** Warna dashboard (placeholder) */
-const COLORS = ["#1e5aa8", "#60a5fa", "#93c5fd", "#bfdbfe"];
-const FAC_COLORS = {
-  Hukum: "#6366f1",
-  Teknik: "#2563eb",
-  Ekonomi: "#16a34a",
-  FISIP: "#f59e0b",
-  Kedokteran: "#ef4444",
-};
+/* ──── helpers ──── */
+const fmt = (n) => { try { return Number(n).toLocaleString("id-ID"); } catch { return n; } };
+const COLORS = ["#1e5aa8","#3b82f6","#60a5fa","#93c5fd","#6366f1","#8b5cf6"];
+const FAC_COLORS = { Hukum:"#6366f1", Teknik:"#2563eb", FKIP:"#0ea5e9", FEB:"#16a34a", FISIP:"#f59e0b", Kedokteran:"#ef4444", Pertanian:"#22c55e", Perikanan:"#14b8a6" };
+const STATUS_COLORS = ["#1e5aa8","#22c55e","#f59e0b","#ef4444","#8b5cf6"];
 
-/** Komponen Card (judul + optional right) */
-function Card({ title, right, children, style }) {
+/* ──── charts ──── */
+function ChartCard({ title, right, children }) {
   return (
-    <section
-      className="card"
-      style={{
-        display: "grid",
-        gap: 12,
-        borderRadius: 18,
-        ...style,
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          gap: 12,
-          alignItems: "center",
-          flexWrap: "wrap",
-        }}
-      >
-        <div style={{ fontWeight: 900, fontSize: 18 }}>{title}</div>
-        {right ? <div>{right}</div> : null}
+    <div className="u-card">
+      <div className="u-card__header">
+        <div className="u-card__title">{title}</div>
+        {right && <div>{right}</div>}
       </div>
       {children}
-    </section>
+    </div>
   );
 }
 
-/** KPI kanan (stack) */
-function KpiRight({ value, label }) {
+function Kpi({ label, value, hint, variant = "blue" }) {
   return (
-    <div
-      className="card"
-      style={{
-        borderRadius: 18,
-        padding: 0,
-        overflow: "hidden",
-      }}
-    >
-      <div
-        style={{
-          padding: 22,
-          display: "grid",
-          placeItems: "center",
-        }}
-      >
-        <div style={{ fontSize: 34, fontWeight: 900, lineHeight: 1 }}>
-          {value}
-        </div>
-      </div>
+    <div className={`u-kpi u-kpi--${variant}`}>
+      <div className="u-kpi__label">{label}</div>
+      <div className="u-kpi__value">{value}</div>
+      {hint && <div className="u-kpi__hint">{hint}</div>}
+    </div>
+  );
+}
 
-      <div
-        style={{
-          borderTop: "1px solid #eef2f7",
-          padding: "12px 14px",
-          display: "flex",
-          justifyContent: "center",
-          gap: 8,
-          color: "#111827",
-          fontWeight: 800,
-        }}
-      >
-        {label}
+function KpiFlat({ label, value, hint, bg }) {
+  return (
+    <div className="u-kpi-flat">
+      <div className="u-kpi-flat__body" style={{ background: bg }}>
+        <div className="u-kpi-flat__label">{label}</div>
+        <div className="u-kpi-flat__value">{value}</div>
+      </div>
+      <div className="u-kpi-flat__footer" style={{ background: bg, opacity: 0.85 }}>
+        {hint}
       </div>
     </div>
   );
 }
 
-/** Donut Jenjang (kiri atas) */
-function DonutJenjang({ data }) {
-  return (
-    <div style={{ height: 300 }}>
-      <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
-          <Pie
-            data={data}
-            dataKey="value"
-            nameKey="label"
-            innerRadius={72}
-            outerRadius={110}
-            paddingAngle={2}
-          >
-            {data.map((_, i) => (
-              <Cell key={i} fill={COLORS[i % COLORS.length]} />
-            ))}
-          </Pie>
-          <Tooltip />
-          <Legend verticalAlign="bottom" height={24} />
-        </PieChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
-
-/** Bar Fakultas (kiri atas) */
-function BarFakultas({ data }) {
-  return (
-    <div style={{ height: 300 }}>
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} barCategoryGap={18}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="label" tick={{ fontSize: 12 }} />
-          <YAxis />
-          <Tooltip />
-          <Bar dataKey="value" fill="#1e5aa8" radius={[10, 10, 0, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
-
-/** Line Tren (single line) */
-function LineSimple({ data, xKey, yKey }) {
-  return (
-    <div style={{ height: 330 }}>
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey={xKey} />
-          <YAxis />
-          <Tooltip />
-          <Line
-            type="monotone"
-            dataKey={yKey}
-            stroke="#1e5aa8"
-            strokeWidth={3}
-            dot={false}
-          />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
-
-/** Multi line tren per fakultas (opsional, tetap layout seperti Figma) */
-function LineFakultas({ data, fakultas }) {
-  return (
-    <div style={{ height: 330 }}>
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="tahun" />
-          <YAxis />
-          <Tooltip />
-          <Legend />
-
-          {fakultas === "Semua" ? (
-            <>
-              <Line
-                type="monotone"
-                dataKey="Hukum"
-                stroke={FAC_COLORS.Hukum}
-                strokeWidth={2}
-                dot={false}
-              />
-              <Line
-                type="monotone"
-                dataKey="Teknik"
-                stroke={FAC_COLORS.Teknik}
-                strokeWidth={2}
-                dot={false}
-              />
-              <Line
-                type="monotone"
-                dataKey="Ekonomi"
-                stroke={FAC_COLORS.Ekonomi}
-                strokeWidth={2}
-                dot={false}
-              />
-              <Line
-                type="monotone"
-                dataKey="FISIP"
-                stroke={FAC_COLORS.FISIP}
-                strokeWidth={2}
-                dot={false}
-              />
-              <Line
-                type="monotone"
-                dataKey="Kedokteran"
-                stroke={FAC_COLORS.Kedokteran}
-                strokeWidth={2}
-                dot={false}
-              />
-            </>
-          ) : (
-            <Line
-              type="monotone"
-              dataKey={fakultas}
-              stroke={FAC_COLORS[fakultas] ?? "#2563eb"}
-              strokeWidth={3}
-              dot
-            />
-          )}
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
-
-/** Tren Transfer Eksternal (Masuk vs Keluar) */
-function LineTransferTrend({ data }) {
-  return (
-    <div style={{ height: 330 }}>
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="tahun" />
-          <YAxis />
-          <Tooltip />
-          <Legend />
-          <Line
-            type="monotone"
-            dataKey="Masuk"
-            stroke="#16a34a"
-            strokeWidth={3}
-            dot={false}
-          />
-          <Line
-            type="monotone"
-            dataKey="Keluar"
-            stroke="#ef4444"
-            strokeWidth={3}
-            dot={false}
-          />
-          <Line
-            type="monotone"
-            dataKey="Net"
-            stroke="#1e5aa8"
-            strokeWidth={2}
-            dot={false}
-            strokeDasharray="6 4"
-          />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
-
-/** BAR Horizontal Mutasi Internal Antar Fakultas */
-function MutasiInternalFakultas({ data }) {
-  return (
-    <div style={{ height: 320 }}>
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} layout="vertical" barCategoryGap={14}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis type="number" />
-          <YAxis type="category" dataKey="fakultas" width={110} />
-          <Tooltip />
-          <Bar dataKey="jumlah" fill="#2563eb" radius={[0, 10, 10, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
-
-/** TABLE Mutasi Internal Antar Prodi */
-function MutasiInternalProdi({ data }) {
-  return (
-    <div style={{ overflowX: "auto" }}>
-      <table width="100%" style={{ borderCollapse: "collapse", minWidth: 520 }}>
-        <thead>
-          <tr style={{ textAlign: "left", borderBottom: "1px solid #e5e7eb" }}>
-            <th style={{ padding: "10px 8px" }}>Prodi</th>
-            <th style={{ padding: "10px 8px" }}>Masuk</th>
-            <th style={{ padding: "10px 8px" }}>Keluar</th>
-            <th style={{ padding: "10px 8px" }}>Net</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((x) => (
-            <tr key={x.prodi} style={{ borderBottom: "1px solid #f1f5f9" }}>
-              <td style={{ padding: "10px 8px", fontWeight: 800 }}>{x.prodi}</td>
-              <td style={{ padding: "10px 8px" }}>{x.masuk}</td>
-              <td style={{ padding: "10px 8px" }}>{x.keluar}</td>
-              <td
-                style={{
-                  padding: "10px 8px",
-                  fontWeight: 900,
-                  color: x.net >= 0 ? "#16a34a" : "#ef4444",
-                }}
-              >
-                {x.net}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <div style={{ marginTop: 8, fontSize: 12, color: "#6b7280" }}>
-        *Mutasi internal = pindah prodi/fakultas di dalam UNPATTI (bukan keluar kampus).
-      </div>
-    </div>
-  );
-}
-
+/* ──── page ──── */
 export default function MahasiswaAktif() {
-  const [tahun, setTahun] = useState("2024");
+  const [tahun, setTahun] = useState("2025");
   const [fakultas, setFakultas] = useState("Semua");
 
-  /** Dummy data (nanti diganti API SIAKAD) */
   const vm = useMemo(() => {
-    const baseYear = tahun === "2025" ? 1.05 : tahun === "2024" ? 1 : 0.92;
+    const yf = tahun === "2025" ? 1.05 : tahun === "2024" ? 1 : 0.92;
+    const FAC_W = { Semua:1, Hukum:0.12, Teknik:0.16, FKIP:0.22, FEB:0.15, FISIP:0.10, Kedokteran:0.06, Pertanian:0.10, Perikanan:0.09 };
+    const ff = FAC_W[fakultas] ?? 1;
 
-    const FAC_WEIGHT = {
-      Semua: 1,
-      Hukum: 0.22,
-      Teknik: 0.28,
-      Ekonomi: 0.24,
-      FISIP: 0.18,
-      Kedokteran: 0.08,
-    };
-    const facFactor = FAC_WEIGHT[fakultas] ?? 1;
-
-    const totalAktif = Math.round(26000 * baseYear * facFactor);
-    const isiKrs = Math.round(totalAktif * 0.78);
-    const nonAktif = Math.round(totalAktif * 0.12);
-    const ipkRata = (
-      3.12 + (tahun === "2025" ? 0.04 : tahun === "2023" ? -0.03 : 0)
-    ).toFixed(2);
+    const aktif    = Math.round(26000 * yf * ff);
+    const nonaktif = Math.round(aktif * 0.08);
+    const cuti     = Math.round(aktif * 0.03);
+    const ipk      = (3.12 + (tahun === "2025" ? 0.04 : tahun === "2023" ? -0.03 : 0)).toFixed(2);
 
     const byJenjang = [
-      { label: "Profesor", value: Math.round(totalAktif * 0.08) },
-      { label: "S1", value: Math.round(totalAktif * 0.78) },
-      { label: "S2", value: Math.round(totalAktif * 0.12) },
-      { label: "S3", value: Math.round(totalAktif * 0.02) },
+      { name: "S1", value: Math.round(aktif * 0.78) },
+      { name: "S2", value: Math.round(aktif * 0.10) },
+      { name: "S3", value: Math.round(aktif * 0.02) },
+      { name: "Profesi", value: Math.round(aktif * 0.06) },
+      { name: "D3", value: Math.round(aktif * 0.04) },
     ];
 
     const barFakultas = [
-      { label: "Hukum", value: Math.round(5200 * baseYear) },
-      { label: "FISIP", value: Math.round(4800 * baseYear) },
-      { label: "FEB", value: Math.round(6100 * baseYear) },
-      { label: "FKIP", value: Math.round(8200 * baseYear) },
-      { label: "Lainnya", value: Math.round(3400 * baseYear) },
+      { name: "FKIP",    value: Math.round(5600 * yf) },
+      { name: "FEB",     value: Math.round(3900 * yf) },
+      { name: "Teknik",  value: Math.round(4200 * yf) },
+      { name: "Hukum",   value: Math.round(3100 * yf) },
+      { name: "FISIP",   value: Math.round(2600 * yf) },
+      { name: "Kedokteran", value: Math.round(1500 * yf) },
+      { name: "Pertanian",  value: Math.round(2700 * yf) },
+      { name: "Perikanan",  value: Math.round(2400 * yf) },
+    ];
+
+    const statusSemester = [
+      { name: "Aktif",         value: Math.round(aktif * 0.82) },
+      { name: "Isi KRS",       value: Math.round(aktif * 0.74) },
+      { name: "Belum KRS",     value: Math.round(aktif * 0.08) },
+      { name: "Non Aktif",     value: nonaktif },
+      { name: "Cuti",          value: cuti },
     ];
 
     const trenAktif = [
-      { label: "2021", value: Math.round(24000 * 0.92 * facFactor) },
-      { label: "2022", value: Math.round(24800 * 0.96 * facFactor) },
-      { label: "2023", value: Math.round(25500 * 1.0 * facFactor) },
-      { label: "2024", value: Math.round(26000 * 1.02 * facFactor) },
-      { label: "2025", value: Math.round(26600 * 1.05 * facFactor) },
+      { tahun: "2021", value: Math.round(23500 * ff) },
+      { tahun: "2022", value: Math.round(24200 * ff) },
+      { tahun: "2023", value: Math.round(25000 * ff) },
+      { tahun: "2024", value: Math.round(25800 * ff) },
+      { tahun: "2025", value: Math.round(26600 * ff) },
     ];
 
-    const trenFakultas = [
-      { tahun: 2020, Hukum: 2100, Teknik: 3200, Ekonomi: 2800, FISIP: 2400, Kedokteran: 900 },
-      { tahun: 2021, Hukum: 2200, Teknik: 3400, Ekonomi: 2900, FISIP: 2500, Kedokteran: 950 },
-      { tahun: 2022, Hukum: 2300, Teknik: 3600, Ekonomi: 3000, FISIP: 2600, Kedokteran: 1000 },
-      { tahun: 2023, Hukum: 2400, Teknik: 3800, Ekonomi: 3100, FISIP: 2700, Kedokteran: 1050 },
-      { tahun: 2024, Hukum: 2500, Teknik: 4000, Ekonomi: 3200, FISIP: 2800, Kedokteran: 1100 },
+    const ipkBar = [
+      { range: "< 2.0",      value: Math.round(aktif * 0.02) },
+      { range: "2.0 - 2.49", value: Math.round(aktif * 0.08) },
+      { range: "2.5 - 2.99", value: Math.round(aktif * 0.22) },
+      { range: "3.0 - 3.49", value: Math.round(aktif * 0.42) },
+      { range: "3.5 - 4.0",  value: Math.round(aktif * 0.26) },
     ];
 
-    const ipkTrend = [
-      { label: "2021", value: 3.08 },
-      { label: "2022", value: 3.12 },
-      { label: "2023", value: 3.10 },
-      { label: "2024", value: 3.14 },
-      { label: "2025", value: 3.16 },
-    ];
-
-    // Rekap transfer eksternal (ini yang card paling bawah)
     const transfer = [
-      { label: "Masuk (Eksternal)", value: Math.round(180 * baseYear) },
-      { label: "Keluar (Eksternal)", value: Math.round(120 * baseYear) },
-      { label: "Total", value: Math.round(300 * baseYear) },
+      { tahun: "2021", internal: 45, external: 32 },
+      { tahun: "2022", internal: 52, external: 38 },
+      { tahun: "2023", internal: 48, external: 41 },
+      { tahun: "2024", internal: 55, external: 45 },
+      { tahun: "2025", internal: 60, external: 50 },
     ];
 
-    // Tren transfer eksternal (ini yang chart line masuk/keluar)
-    const transferTrend = [
-      { tahun: 2021, Masuk: Math.round(160 * baseYear), Keluar: Math.round(110 * baseYear) },
-      { tahun: 2022, Masuk: Math.round(170 * baseYear), Keluar: Math.round(115 * baseYear) },
-      { tahun: 2023, Masuk: Math.round(180 * baseYear), Keluar: Math.round(120 * baseYear) },
-      { tahun: 2024, Masuk: Math.round(190 * baseYear), Keluar: Math.round(125 * baseYear) },
-      { tahun: 2025, Masuk: Math.round(200 * baseYear), Keluar: Math.round(130 * baseYear) },
-    ].map((x) => ({ ...x, Net: x.Masuk - x.Keluar }));
-
-    // ====== TAMBAHAN: MUTASI INTERNAL (FAKULTAS + PRODI) ======
-    const mutasiInternalFakultas = [
-      { fakultas: "Teknik", jumlah: Math.round(140 * baseYear) },
-      { fakultas: "Ekonomi", jumlah: Math.round(110 * baseYear) },
-      { fakultas: "FISIP", jumlah: Math.round(95 * baseYear) },
-      { fakultas: "Hukum", jumlah: Math.round(70 * baseYear) },
-      { fakultas: "Kedokteran", jumlah: Math.round(40 * baseYear) },
+    const ipkSks = [
+      { range: "< 2.0",      sks: 16 },
+      { range: "2.0 - 2.49", sks: 18 },
+      { range: "2.5 - 2.99", sks: 20 },
+      { range: "3.0 - 3.49", sks: 22 },
+      { range: "3.5 - 4.0",  sks: 24 },
     ];
 
-    const mutasiInternalProdi = [
-      { prodi: "Informatika", masuk: Math.round(45 * baseYear), keluar: Math.round(30 * baseYear) },
-      { prodi: "Manajemen", masuk: Math.round(38 * baseYear), keluar: Math.round(42 * baseYear) },
-      { prodi: "Ilmu Hukum", masuk: Math.round(22 * baseYear), keluar: Math.round(35 * baseYear) },
-      { prodi: "Akuntansi", masuk: Math.round(31 * baseYear), keluar: Math.round(28 * baseYear) },
-      { prodi: "Teknik Sipil", masuk: Math.round(26 * baseYear), keluar: Math.round(20 * baseYear) },
-    ]
-      .map((x) => ({ ...x, net: x.masuk - x.keluar }))
-      .sort((a, b) => Math.abs(b.net) - Math.abs(a.net)); // biar terlihat yang paling signifikan
+    const jenjangFlat = [
+      { label: "Mahasiswa D3", value: byJenjang.find(x=>x.name==="D3")?.value ?? 0, bg: "#14b8a6" },
+      { label: "Mahasiswa S1", value: byJenjang.find(x=>x.name==="S1")?.value ?? 0, bg: "#ef4444" },
+      { label: "Mahasiswa S2", value: byJenjang.find(x=>x.name==="S2")?.value ?? 0, bg: "#3b82f6" },
+      { label: "Mahasiswa S3", value: byJenjang.find(x=>x.name==="S3")?.value ?? 0, bg: "#eab308" },
+      { label: "Mahasiswa Profesi", value: byJenjang.find(x=>x.name==="Profesi")?.value ?? 0, bg: "#8b5cf6" },
+    ];
 
-    return {
-      totalAktif,
-      isiKrs,
-      nonAktif,
-      ipkRata,
-      byJenjang,
-      barFakultas,
-      trenAktif,
-      trenFakultas,
-      ipkTrend,
-      transfer,
-      transferTrend,
-      mutasiInternalFakultas,
-      mutasiInternalProdi,
-    };
+    return { aktif, nonaktif, cuti, ipk, byJenjang, barFakultas, statusSemester, trenAktif, ipkBar, transfer, ipkSks, jenjangFlat };
   }, [tahun, fakultas]);
 
   return (
-    <div style={{ display: "grid", gap: 16 }}>
-      {/* HEADER + FILTER (mirip figma) */}
-      <div
-        className="card"
-        style={{
-          borderRadius: 18,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: 12,
-        }}
-      >
-        <div style={{ display: "grid", gap: 4 }}>
-          <div style={{ fontSize: 22, fontWeight: 900 }}>Mahasiswa Aktif</div>
-          <div style={{ fontSize: 13, color: "#6b7280" }}>
-            Data placeholder — nanti diganti API SIAKAD.
-            <b style={{ marginLeft: 6 }}>Transfer dibedakan: eksternal vs mutasi internal.</b>
-          </div>
+    <div className="u-stack">
+      {/* Header + Filters */}
+      <div className="u-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <div style={{ fontSize: 18, fontWeight: 900 }}>Mahasiswa Aktif</div>
+          <div className="u-text-muted u-text-sm">Data mahasiswa aktif per tahun akademik</div>
         </div>
-
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
-          <label style={{ fontSize: 13, color: "#6b7280", fontWeight: 800 }}>
-            Tahun
-            <select
-              value={tahun}
-              onChange={(e) => setTahun(e.target.value)}
-              style={{
-                marginLeft: 10,
-                padding: "10px 12px",
-                borderRadius: 12,
-                border: "1px solid #e5e7eb",
-                background: "#fff",
-                fontSize: 15,
-                fontWeight: 800,
-              }}
-            >
-              <option value="2025">2025</option>
-              <option value="2024">2024</option>
-              <option value="2023">2023</option>
-            </select>
-          </label>
-
-          <label style={{ fontSize: 13, color: "#6b7280", fontWeight: 800 }}>
-            Fakultas
-            <select
-              value={fakultas}
-              onChange={(e) => setFakultas(e.target.value)}
-              style={{
-                marginLeft: 10,
-                padding: "10px 12px",
-                borderRadius: 12,
-                border: "1px solid #e5e7eb",
-                background: "#fff",
-                fontSize: 15,
-                fontWeight: 800,
-              }}
-            >
-              <option value="Semua">Semua</option>
-              <option value="Hukum">Hukum</option>
-              <option value="Teknik">Teknik</option>
-              <option value="Ekonomi">Ekonomi</option>
-              <option value="FISIP">FISIP</option>
-              <option value="Kedokteran">Kedokteran</option>
-            </select>
-          </label>
+        <div className="u-filters">
+          <label>Tahun <select className="u-select" value={tahun} onChange={e => setTahun(e.target.value)}>
+            <option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option>
+          </select></label>
+          <label>Fakultas <select className="u-select" value={fakultas} onChange={e => setFakultas(e.target.value)}>
+            <option value="Semua">Semua</option>
+            {Object.keys(FAC_COLORS).map(f => <option key={f} value={f}>{f}</option>)}
+          </select></label>
         </div>
       </div>
 
-      {/* GRID UTAMA (kiri besar + kanan KPI stack) */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1.6fr 0.9fr",
-          gap: 16,
-          alignItems: "start",
-        }}
-      >
-        {/* LEFT COLUMN */}
-        <div style={{ display: "grid", gap: 16 }}>
-          {/* Row 1: Donut + Bar (sejajar seperti figma) */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-            <Card title="Mahasiswa Aktif Berdasarkan Jenjang" style={{ minHeight: 380 }}>
-              <DonutJenjang data={vm.byJenjang} />
-            </Card>
+      {/* Main Layout: Charts left + KPI right */}
+      <div className="u-layout-lr">
+        {/* LEFT */}
+        <div className="u-stack">
+          {/* Row 1: Donut Jenjang + Bar Angkatan */}
+          <div className="u-grid-2">
+            <ChartCard title="Mahasiswa Aktif Berdasarkan Jenjang Pendidikan">
+              <div style={{ height: 300 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={vm.byJenjang} dataKey="value" nameKey="name" innerRadius={70} outerRadius={110} paddingAngle={2}>
+                      {vm.byJenjang.map((_, i) => <Cell key={i} fill={COLORS[i]} />)}
+                    </Pie>
+                    <Tooltip formatter={v => fmt(v)} />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </ChartCard>
 
-            <Card title="Mahasiswa Aktif Berdasarkan Fakultas" style={{ minHeight: 380 }}>
-              <BarFakultas data={vm.barFakultas} />
-            </Card>
+            <ChartCard title="Mahasiswa Aktif Berdasarkan Angkatan">
+              <div style={{ height: 300 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={vm.trenAktif}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="tahun" />
+                    <YAxis />
+                    <Tooltip formatter={v => fmt(v)} />
+                    <Bar dataKey="value" fill="#1e5aa8" radius={[6,6,0,0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </ChartCard>
           </div>
 
-          {/* Row 2: Tren Mahasiswa Aktif (full width) */}
-          <Card title="Tren Mahasiswa Aktif" style={{ minHeight: 420 }}>
-            <LineSimple data={vm.trenAktif} xKey="label" yKey="value" />
-          </Card>
+          {/* Tren Mahasiswa Aktif */}
+          <ChartCard title="Tren Mahasiswa Aktif (5 Tahun)">
+            <div style={{ height: 280 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={vm.trenAktif}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="tahun" />
+                  <YAxis />
+                  <Tooltip formatter={v => fmt(v)} />
+                  <Line type="monotone" dataKey="value" stroke="#22c55e" strokeWidth={3} dot={{ r: 4 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </ChartCard>
+        </div>
 
-          {/* Row 3: Tren Transfer (EKSTERNAL) */}
-          <Card
-            title="Tren Transfer Eksternal (Masuk vs Keluar)"
-            right={<span style={{ fontWeight: 900, color: "#6b7280" }}>Net = Masuk - Keluar</span>}
-            style={{ minHeight: 420 }}
-          >
-            <LineTransferTrend data={vm.transferTrend} />
-          </Card>
+        {/* RIGHT KPI */}
+        <div className="u-stack">
+          <Kpi label="👥 Mahasiswa Aktif" value={fmt(vm.aktif)} hint={`Tahun ${tahun}`} variant="green" />
+          <Kpi label="📋 Mahasiswa Isi KRS" value={fmt(Math.round(vm.aktif * 0.82))} variant="sky" />
+          <Kpi label="🆕 Mahasiswa Baru" value={fmt(Math.round(vm.aktif * 0.18))} hint={`T.A ${tahun} / ${Number(tahun)+1}`} variant="brown" />
+          <Kpi label="❌ Mahasiswa Non Aktif" value={fmt(vm.nonaktif)} variant="red" />
+          <Kpi label="⏸️ Mahasiswa Cuti" value={fmt(vm.cuti)} variant="amber" />
+          <Kpi label="📊 IPK Rata-rata" value={vm.ipk} variant="purple" />
+        </div>
+      </div>
 
-          <Card
-            title="IPK Mahasiswa Aktif"
-            right={<span style={{ fontWeight: 900 }}>Rata-rata: {vm.ipkRata}</span>}
-            style={{ minHeight: 420 }}
-          >
-            <LineSimple data={vm.ipkTrend} xKey="label" yKey="value" />
-          </Card>
+      {/* Section Divider */}
+      <div className="u-divider">MAHASISWA AKTIF</div>
 
+      {/* KPI Flat Cards (jenjang) */}
+      <div className="u-grid-5">
+        {vm.jenjangFlat.map(k => (
+          <KpiFlat key={k.label} label={k.label} value={fmt(k.value)} hint={`Data Tahun ${tahun}`} bg={k.bg} />
+        ))}
+      </div>
 
-          {/* ====== TAMBAHAN: MUTASI INTERNAL (FAKULTAS + PRODI) ====== */}
-          <Card
-            title="Mutasi Internal Antar Fakultas"
-            right={<span style={{ fontWeight: 900, color: "#6b7280" }}>Pindah fakultas di UNPATTI</span>}
-            style={{ minHeight: 380 }}
-          >
-            <MutasiInternalFakultas data={vm.mutasiInternalFakultas} />
-          </Card>
+      {/* Bar Fakultas */}
+      <ChartCard title="Mahasiswa Aktif Berdasarkan Fakultas">
+        <div style={{ height: 320 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={vm.barFakultas} barCategoryGap={14}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+              <YAxis />
+              <Tooltip formatter={v => fmt(v)} />
+              <Bar dataKey="value" radius={[6,6,0,0]}>
+                {vm.barFakultas.map((d, i) => <Cell key={i} fill={FAC_COLORS[d.name] ?? COLORS[i % COLORS.length]} />)}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </ChartCard>
 
-          <Card
-            title="Mutasi Internal Antar Prodi"
-            right={<span style={{ fontWeight: 900, color: "#6b7280" }}>Masuk/Keluar prodi (internal)</span>}
-            style={{ minHeight: 360 }}
-          >
-            <MutasiInternalProdi data={vm.mutasiInternalProdi} />
-          </Card>
+      {/* Status Semester + IPK Distribution */}
+      <div className="u-grid-2">
+        <ChartCard title="Mahasiswa Aktif Berdasarkan Status Semester">
+          <div style={{ height: 300 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={vm.statusSemester} barCategoryGap={14}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                <YAxis />
+                <Tooltip formatter={v => fmt(v)} />
+                <Bar dataKey="value" radius={[6,6,0,0]}>
+                  {vm.statusSemester.map((_, i) => <Cell key={i} fill={STATUS_COLORS[i]} />)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </ChartCard>
 
-          {/* Row 4: IPK (full width) */}
-          
+        <ChartCard title="Distribusi IPK Mahasiswa Aktif" right={<span className="u-badge u-badge--blue">Rata-rata: {vm.ipk}</span>}>
+          <div style={{ height: 300 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={vm.ipkBar} barCategoryGap={14}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="range" tick={{ fontSize: 11 }} />
+                <YAxis />
+                <Tooltip formatter={v => fmt(v)} />
+                <Bar dataKey="value" fill="#6366f1" radius={[6,6,0,0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </ChartCard>
+      </div>
 
-          {/* Row 5: Mahasiswa Transfer (EKSTERNAL) */}
-          <Card
-            title="Mahasiswa Transfer Eksternal"
-            right={<span style={{ fontWeight: 900, color: "#6b7280" }}>Rekap tahunan</span>}
-            style={{ minHeight: 360 }}
-          >
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-              {vm.transfer.map((x) => (
-                <div key={x.label} className="card" style={{ borderRadius: 16, padding: 16 }}>
-                  <div style={{ color: "#6b7280", fontSize: 13, fontWeight: 900 }}>{x.label}</div>
-                  <div style={{ fontSize: 30, fontWeight: 900 }}>{x.value.toLocaleString("id-ID")}</div>
-                </div>
+      {/* Transfer + IPK-SKS */}
+      <div className="u-grid-2">
+        <ChartCard title="Grafik Mahasiswa Transfer Per Tahun" right={<span className="u-badge u-badge--green">Internal & External (Masuk)</span>}>
+          <div style={{ height: 280 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={vm.transfer}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="tahun" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="internal" name="Internal" stroke="#1e5aa8" strokeWidth={2} dot />
+                <Line type="monotone" dataKey="external" name="External (Masuk)" stroke="#22c55e" strokeWidth={2} dot />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </ChartCard>
+
+        <ChartCard title="Range IPK & Pengembalian SKS">
+          <table className="u-table">
+            <thead><tr><th>Range IPK</th><th>Maks SKS</th><th>Jumlah Mahasiswa</th></tr></thead>
+            <tbody>
+              {vm.ipkSks.map((r, i) => (
+                <tr key={r.range}>
+                  <td style={{ fontWeight: 800 }}>{r.range}</td>
+                  <td>{r.sks} SKS</td>
+                  <td style={{ fontWeight: 800 }}>{fmt(vm.ipkBar[i]?.value ?? 0)}</td>
+                </tr>
               ))}
-            </div>
-            <div style={{ fontSize: 13, color: "#6b7280", marginTop: 10 }}>
-              *Eksternal = perpindahan lintas kampus (masuk/keluar UNPATTI).
-            </div>
-          </Card>
-        </div>
-
-        {/* RIGHT COLUMN (KPI stack seperti figma) */}
-        <div style={{ display: "grid", gap: 16 }}>
-          <KpiRight value={vm.totalAktif.toLocaleString("id-ID")} label="Mahasiswa Aktif" />
-          <KpiRight value={vm.isiKrs.toLocaleString("id-ID")} label="Mahasiswa Isi KRS" />
-          <KpiRight value={vm.nonAktif.toLocaleString("id-ID")} label="Mahasiswa Non Aktif" />
-          <KpiRight value={vm.ipkRata} label="IPK Rata-rata Semester" />
-        </div>
+            </tbody>
+          </table>
+        </ChartCard>
       </div>
 
-      <div style={{ fontSize: 12, color: "#6b7280" }}></div>
+      {/* Map Placeholder */}
+      <ChartCard title="Sebaran Mahasiswa Aktif Per Wilayah">
+        <div className="u-map-placeholder">
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 36, marginBottom: 8 }}>🗺️</div>
+            <div>Peta Sebaran Wilayah</div>
+            <div style={{ fontSize: 11, marginTop: 4 }}>Akan diimplementasi dengan library peta</div>
+          </div>
+        </div>
+      </ChartCard>
     </div>
   );
 }
