@@ -1,0 +1,484 @@
+# 📋 Spesifikasi Format Data API untuk Dashboard UNPATTI
+
+> Dokumen ini berisi format data (JSON) yang dibutuhkan oleh Dashboard Warehouse UNPATTI.
+> Silakan kirimkan ke tim SIAKAD sebagai referensi untuk menyediakan endpoint API.
+
+---
+
+## Filter Global (Parameter Query)
+
+Semua endpoint menerima parameter filter berikut:
+
+| Parameter | Tipe | Contoh | Keterangan |
+|---|---|---|---|
+| `tahun` | string | `"2025"` | Tahun akademik |
+| `fakultas` | string | `"Teknik"` | Nama fakultas (opsional, default: semua) |
+| `semester` | string | `"Ganjil"` | Ganjil / Genap (opsional) |
+
+---
+
+## Endpoint 1: Dashboard Beranda
+
+**`GET /api/dashboard/beranda?tahun=2025`**
+
+```json
+{
+  "tahun": "2025",
+  "totalPendaftar": {
+    "total": 13500,
+    "snbp": 4500,
+    "snbt": 5400,
+    "mandiri": 3600
+  },
+  "mahasiswaBaru": {
+    "total": 5600,
+    "registrasi": 5050,
+    "belumRegistrasi": 550,
+    "laki": 2800,
+    "perempuan": 2800
+  },
+  "mahasiswaAktif": {
+    "total": 19000,
+    "laki": 9500,
+    "perempuan": 9500
+  },
+  "kelulusan": {
+    "total": 3600,
+    "tepatWaktu": 2250,
+    "tidakTepatWaktu": 1350
+  },
+  "prestasi": {
+    "total": 130,
+    "nasional": 40,
+    "internasional": 15
+  },
+  "afirmasi": {
+    "total": 920,
+    "kipk": 580,
+    "disabilitas": 85
+  },
+  "topFakultasPendaftar": [
+    { "fakultas": "Teknik", "value": 3600 },
+    { "fakultas": "Ekonomi", "value": 2950 },
+    { "fakultas": "Hukum", "value": 2200 }
+  ]
+}
+```
+
+---
+
+## Endpoint 2: Total Pendaftar (Per Jalur)
+
+**`GET /api/penerimaan?tahun=2025&jalur=snbp`**
+
+```json
+{
+  "tahun": "2025",
+  "jalur": "snbp",
+  "kpi": {
+    "pendaftar": 4500,
+    "diterima": 2300,
+    "registrasi": 1850
+  },
+  "perFakultas": [
+    { "fakultas": "Hukum", "pendaftar": 880, "diterima": 440 },
+    { "fakultas": "Teknik", "pendaftar": 1300, "diterima": 660 },
+    { "fakultas": "Ekonomi", "pendaftar": 950, "diterima": 470 }
+  ]
+}
+```
+
+> Jalur yang tersedia: `snbp`, `snbt`, `mandiri`
+
+---
+
+## Endpoint 3: Mahasiswa Aktif
+
+**`GET /api/mahasiswa/aktif?tahun=2025&fakultas=Semua`**
+
+```json
+{
+  "tahun": "2025",
+  "fakultas": "Semua",
+  "ringkasan": {
+    "totalAktif": 27300,
+    "nonAktif": 2184,
+    "cuti": 819,
+    "isiKRS": 22386,
+    "belumKRS": 2184,
+    "mahasiswaBaru": 4914,
+    "ipkRataRata": 3.16
+  },
+  "perJenjang": [
+    { "jenjang": "S1", "jumlah": 21294 },
+    { "jenjang": "S2", "jumlah": 2730 },
+    { "jenjang": "S3", "jumlah": 546 },
+    { "jenjang": "Profesi", "jumlah": 1638 },
+    { "jenjang": "D3", "jumlah": 1092 }
+  ],
+  "perFakultas": [
+    { "fakultas": "FKIP", "jumlah": 5880 },
+    { "fakultas": "FEB", "jumlah": 4095 },
+    { "fakultas": "Teknik", "jumlah": 4410 },
+    { "fakultas": "Hukum", "jumlah": 3255 },
+    { "fakultas": "FISIP", "jumlah": 2730 },
+    { "fakultas": "Kedokteran", "jumlah": 1575 },
+    { "fakultas": "Pertanian", "jumlah": 2835 },
+    { "fakultas": "Perikanan", "jumlah": 2520 }
+  ],
+  "statusSemester": [
+    { "status": "Aktif", "jumlah": 22386 },
+    { "status": "Isi KRS", "jumlah": 20202 },
+    { "status": "Belum KRS", "jumlah": 2184 },
+    { "status": "Non Aktif", "jumlah": 2184 },
+    { "status": "Cuti", "jumlah": 819 }
+  ],
+  "distribusiIPK": [
+    { "range": "< 2.0", "jumlah": 546 },
+    { "range": "2.0 - 2.49", "jumlah": 2184 },
+    { "range": "2.5 - 2.99", "jumlah": 6006 },
+    { "range": "3.0 - 3.49", "jumlah": 11466 },
+    { "range": "3.5 - 4.0", "jumlah": 7098 }
+  ],
+  "trenAktif": [
+    { "tahun": "2021", "jumlah": 23500 },
+    { "tahun": "2022", "jumlah": 24200 },
+    { "tahun": "2023", "jumlah": 25000 },
+    { "tahun": "2024", "jumlah": 25800 },
+    { "tahun": "2025", "jumlah": 26600 }
+  ],
+  "transfer": [
+    { "tahun": "2021", "internal": 45, "external": 32 },
+    { "tahun": "2022", "internal": 52, "external": 38 },
+    { "tahun": "2023", "internal": 48, "external": 41 },
+    { "tahun": "2024", "internal": 55, "external": 45 },
+    { "tahun": "2025", "internal": 60, "external": 50 }
+  ]
+}
+```
+
+---
+
+## Endpoint 4: Mahasiswa Baru
+
+**`GET /api/mahasiswa/baru?tahun=2025&jalur=Semua&fakultas=Semua`**
+
+```json
+{
+  "tahun": "2025",
+  "ringkasan": {
+    "total": 5512,
+    "dayaTampung": 6339,
+    "peminat": 15434,
+    "registrasi": 4961,
+    "belumRegistrasi": 551
+  },
+  "perJalur": {
+    "snbp": 1874,
+    "snbt": 2260,
+    "mandiri": {
+      "total": 1378,
+      "reguler": 551,
+      "rpl": 276,
+      "prestasi": 345,
+      "afirmasi": 206
+    }
+  },
+  "topProdi": [
+    { "prodi": "Teknik Informatika", "jumlah": 520 },
+    { "prodi": "Manajemen", "jumlah": 460 },
+    { "prodi": "Hukum", "jumlah": 420 },
+    { "prodi": "Kedokteran", "jumlah": 380 },
+    { "prodi": "Ilmu Komunikasi", "jumlah": 340 },
+    { "prodi": "Akuntansi", "jumlah": 310 },
+    { "prodi": "Teknik Sipil", "jumlah": 280 },
+    { "prodi": "Pendidikan Matematika", "jumlah": 260 }
+  ],
+  "asalWilayah": [
+    { "wilayah": "Maluku", "jumlah": 3197 },
+    { "wilayah": "Papua", "jumlah": 772 },
+    { "wilayah": "Sulawesi", "jumlah": 661 },
+    { "wilayah": "Jawa", "jumlah": 441 },
+    { "wilayah": "Lainnya", "jumlah": 441 }
+  ]
+}
+```
+
+---
+
+## Endpoint 5: Lulusan
+
+**`GET /api/lulusan?periodeAkhir=2025&fakultas=Semua`**
+
+```json
+{
+  "periodeAkhir": 2025,
+  "fakultas": "Semua",
+  "ringkasan": {
+    "totalTercatat": 106391,
+    "total5Tahun": 25479,
+    "ipkRataRata": 3.33,
+    "totalCumlaude": 1784
+  },
+  "perTahun": [
+    {
+      "tahun": "2021",
+      "totalLulusan": 4521,
+      "ipkRataRata": 3.32,
+      "lamaStudiRataRata": 4.8,
+      "tepatWaktuPersen": 90,
+      "cumlaude": 316
+    },
+    {
+      "tahun": "2022",
+      "totalLulusan": 4372,
+      "ipkRataRata": 3.32,
+      "lamaStudiRataRata": 4.6,
+      "tepatWaktuPersen": 90,
+      "cumlaude": 306
+    },
+    {
+      "tahun": "2023",
+      "totalLulusan": 6179,
+      "ipkRataRata": 3.31,
+      "lamaStudiRataRata": 3.9,
+      "tepatWaktuPersen": 90,
+      "cumlaude": 433
+    },
+    {
+      "tahun": "2024",
+      "totalLulusan": 5492,
+      "ipkRataRata": 3.30,
+      "lamaStudiRataRata": 3.7,
+      "tepatWaktuPersen": 90,
+      "cumlaude": 384
+    },
+    {
+      "tahun": "2025",
+      "totalLulusan": 4915,
+      "ipkRataRata": 3.38,
+      "lamaStudiRataRata": 4.0,
+      "tepatWaktuPersen": 90,
+      "cumlaude": 344
+    }
+  ],
+  "perFakultas": [
+    { "fakultas": "FKIP", "totalLulusan": 9276 },
+    { "fakultas": "FEBIS", "totalLulusan": 4638 },
+    { "fakultas": "HUKUM", "totalLulusan": 3092 },
+    { "fakultas": "FISIP", "totalLulusan": 2319 },
+    { "fakultas": "TEKNIK", "totalLulusan": 1856 },
+    { "fakultas": "PASCA", "totalLulusan": 1546 },
+    { "fakultas": "FKEDOK", "totalLulusan": 1325 },
+    { "fakultas": "FAPERTA", "totalLulusan": 1159 },
+    { "fakultas": "FAPERIK", "totalLulusan": 1031 },
+    { "fakultas": "SAINTEK", "totalLulusan": 928 },
+    { "fakultas": "PSDKU ARU", "totalLulusan": 843 },
+    { "fakultas": "PSDKU MBD", "totalLulusan": 773 }
+  ],
+  "distribusiIPK": [
+    { "range": "< 2.5", "jumlah": 1274 },
+    { "range": "2.5 - 2.99", "jumlah": 3822 },
+    { "range": "3.0 - 3.49", "jumlah": 11466 },
+    { "range": "3.5 - 4.0", "jumlah": 8918 }
+  ]
+}
+```
+
+---
+
+## Endpoint 6: Mahasiswa Keluar
+
+**`GET /api/mahasiswa/keluar?periodeAkhir=2025&fakultas=Semua`**
+
+```json
+{
+  "periodeAkhir": 2025,
+  "fakultas": "Semua",
+  "mutasiExternal": [
+    { "tahun": "2021", "keluar": 85 },
+    { "tahun": "2022", "keluar": 92 },
+    { "tahun": "2023", "keluar": 78 },
+    { "tahun": "2024", "keluar": 95 },
+    { "tahun": "2025", "keluar": 88 }
+  ],
+  "statusKeluar": [
+    {
+      "tahun": "2021",
+      "wafat": 3,
+      "dropout": 45,
+      "mutasiExternal": 85,
+      "mengundurkanDiri": 120,
+      "total": 253
+    },
+    {
+      "tahun": "2022",
+      "wafat": 2,
+      "dropout": 52,
+      "mutasiExternal": 92,
+      "mengundurkanDiri": 135,
+      "total": 281
+    },
+    {
+      "tahun": "2023",
+      "wafat": 4,
+      "dropout": 48,
+      "mutasiExternal": 78,
+      "mengundurkanDiri": 110,
+      "total": 240
+    },
+    {
+      "tahun": "2024",
+      "wafat": 1,
+      "dropout": 55,
+      "mutasiExternal": 95,
+      "mengundurkanDiri": 142,
+      "total": 293
+    },
+    {
+      "tahun": "2025",
+      "wafat": 2,
+      "dropout": 50,
+      "mutasiExternal": 88,
+      "mengundurkanDiri": 128,
+      "total": 268
+    }
+  ]
+}
+```
+
+---
+
+## Endpoint 7: Pelaporan — CP1 (Awal Semester)
+
+**`GET /api/pelaporan/cp1?tahun=2025&fakultas=Semua`**
+
+```json
+{
+  "tahun": "2025",
+  "ringkasan": {
+    "totalMahasiswa": 2835,
+    "krsDisetujui": 2325,
+    "krsBelumDisetujui": 510,
+    "mahasiswaAktif": 2410
+  },
+  "perProdi": [
+    {
+      "prodi": "Teknik Informatika",
+      "fakultas": "FT",
+      "maba": 139,
+      "total": 630,
+      "krsDisetujui": 517,
+      "krsBelum": 113,
+      "aktif": 536,
+      "nonAktif": 38,
+      "cuti": 19,
+      "mundur": 13,
+      "dikeluarkan": 6,
+      "transfer": 6
+    },
+    {
+      "prodi": "Manajemen",
+      "fakultas": "FEB",
+      "maba": 127,
+      "total": 578,
+      "krsDisetujui": 474,
+      "krsBelum": 104,
+      "aktif": 491,
+      "nonAktif": 35,
+      "cuti": 17,
+      "mundur": 12,
+      "dikeluarkan": 6,
+      "transfer": 6
+    }
+  ]
+}
+```
+
+> **Catatan:** Contoh di atas hanya menampilkan 2 prodi. Data sebenarnya berisi **semua program studi**.
+
+---
+
+## Endpoint 8: Pelaporan — CP2 (Akhir Semester)
+
+**`GET /api/pelaporan/cp2?tahun=2025&fakultas=Semua`**
+
+```json
+{
+  "tahun": "2025",
+  "ringkasan": {
+    "totalMataKuliah": 4410,
+    "sudahFinalisasi": 3749,
+    "belumFinalisasi": 661
+  },
+  "komposisiNilai": [
+    { "grade": "A", "jumlah": 1235 },
+    { "grade": "B", "jumlah": 1544 },
+    { "grade": "C", "jumlah": 970 },
+    { "grade": "D", "jumlah": 441 },
+    { "grade": "E", "jumlah": 221 }
+  ],
+  "trenIPSIPK": [
+    { "semester": "Ganjil 2023", "ips": 3.08, "ipk": 3.10 },
+    { "semester": "Genap 2023", "ips": 3.12, "ipk": 3.11 },
+    { "semester": "Ganjil 2024", "ips": 3.15, "ipk": 3.13 },
+    { "semester": "Genap 2024", "ips": 3.18, "ipk": 3.15 },
+    { "semester": "Ganjil 2025", "ips": 3.22, "ipk": 3.17 }
+  ],
+  "perProdi": [
+    {
+      "prodi": "Teknik Informatika",
+      "nilaiA": 320,
+      "nilaiB": 410,
+      "nilaiC": 240,
+      "nilaiD": 95,
+      "nilaiE": 35,
+      "total": 1100,
+      "ips": 3.24,
+      "ipk": 3.18
+    },
+    {
+      "prodi": "Manajemen",
+      "nilaiA": 280,
+      "nilaiB": 380,
+      "nilaiC": 260,
+      "nilaiD": 110,
+      "nilaiE": 40,
+      "total": 1070,
+      "ips": 3.18,
+      "ipk": 3.14
+    }
+  ]
+}
+```
+
+---
+
+## Ringkasan Endpoint
+
+| No | Endpoint | Method | Keterangan |
+|---|---|---|---|
+| 1 | `/api/dashboard/beranda` | GET | Ringkasan KPI halaman utama |
+| 2 | `/api/penerimaan` | GET | Data pendaftar per jalur (SNBP/SNBT/Mandiri) |
+| 3 | `/api/mahasiswa/aktif` | GET | Mahasiswa aktif, jenjang, fakultas, IPK, transfer |
+| 4 | `/api/mahasiswa/baru` | GET | Mahasiswa baru, jalur, prodi, asal wilayah |
+| 5 | `/api/lulusan` | GET | Data lulusan, IPK, lama studi, per fakultas |
+| 6 | `/api/mahasiswa/keluar` | GET | Mutasi, dropout, wafat, mengundurkan diri |
+| 7 | `/api/pelaporan/cp1` | GET | Checkpoint 1 — registrasi, KRS, aktivitas kuliah |
+| 8 | `/api/pelaporan/cp2` | GET | Checkpoint 2 — finalisasi nilai, komposisi, IPS/IPK |
+
+---
+
+## Catatan Teknis
+
+> [!IMPORTANT]
+> - Semua response harus dalam format **JSON**
+> - Semua angka bertipe **number** (bukan string)
+> - Nama field menggunakan **camelCase**
+> - API harus mendukung **CORS** agar bisa diakses oleh frontend
+> - Disarankan menggunakan **HTTPS**
+
+> [!TIP]
+> - Jika ada field yang belum tersedia di database, bisa dikosongkan dengan `null`
+> - Jika endpoint terlalu berat, bisa dipecah menjadi beberapa sub-endpoint
+> - Endpoint beranda bisa dijadikan endpoint agregasi yang `query`-nya lebih ringan
