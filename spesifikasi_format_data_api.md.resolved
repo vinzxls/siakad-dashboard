@@ -2,6 +2,8 @@
 
 > Dokumen ini berisi format data (JSON) yang dibutuhkan oleh Dashboard Warehouse UNPATTI.
 > Silakan kirimkan ke tim SIAKAD sebagai referensi untuk menyediakan endpoint API.
+>
+> **Diperbarui:** Maret 2026 — Disesuaikan dengan filter berbasis semester dan field baru.
 
 ---
 
@@ -11,19 +13,21 @@ Semua endpoint menerima parameter filter berikut:
 
 | Parameter | Tipe | Contoh | Keterangan |
 |---|---|---|---|
-| `tahun` | string | `"2025"` | Tahun akademik |
+| `semester` | string | `"2025-2"` | Semester berjalan (format: `YYYY-N`, N=1 Ganjil, N=2 Genap) |
 | `fakultas` | string | `"Teknik"` | Nama fakultas (opsional, default: semua) |
-| `semester` | string | `"Ganjil"` | Ganjil / Genap (opsional) |
+| `jenjang` | string | `"S1"` | Jenjang pendidikan: S1, S2, S3, D3, Profesi (opsional, default: semua) |
+
+> **Contoh semester:** `2021-1` = Ganjil 2021, `2021-2` = Genap 2021, ..., `2025-2` = Genap 2025
 
 ---
 
 ## Endpoint 1: Dashboard Beranda
 
-**`GET /api/dashboard/beranda?tahun=2025`**
+**`GET /api/dashboard/beranda?semester=2025-2`**
 
 ```json
 {
-  "tahun": "2025",
+  "semester": "2025-2",
   "totalPendaftar": {
     "total": 13500,
     "snbp": 4500,
@@ -69,11 +73,11 @@ Semua endpoint menerima parameter filter berikut:
 
 ## Endpoint 2: Total Pendaftar (Per Jalur)
 
-**`GET /api/penerimaan?tahun=2025&jalur=snbp`**
+**`GET /api/penerimaan?semester=2025-2&jalur=snbp`**
 
 ```json
 {
-  "tahun": "2025",
+  "semester": "2025-2",
   "jalur": "snbp",
   "kpi": {
     "pendaftar": 4500,
@@ -94,12 +98,13 @@ Semua endpoint menerima parameter filter berikut:
 
 ## Endpoint 3: Mahasiswa Aktif
 
-**`GET /api/mahasiswa/aktif?tahun=2025&fakultas=Semua`**
+**`GET /api/mahasiswa/aktif?semester=2025-2&fakultas=Semua&jenjang=Semua`**
 
 ```json
 {
-  "tahun": "2025",
+  "semester": "2025-2",
   "fakultas": "Semua",
+  "jenjang": "Semua",
   "ringkasan": {
     "totalAktif": 27300,
     "nonAktif": 2184,
@@ -141,11 +146,16 @@ Semua endpoint menerima parameter filter berikut:
     { "range": "3.5 - 4.0", "jumlah": 7098 }
   ],
   "trenAktif": [
-    { "tahun": "2021", "jumlah": 23500 },
-    { "tahun": "2022", "jumlah": 24200 },
-    { "tahun": "2023", "jumlah": 25000 },
-    { "tahun": "2024", "jumlah": 25800 },
-    { "tahun": "2025", "jumlah": 26600 }
+    { "semester": "2021-1", "jumlah": 23100 },
+    { "semester": "2021-2", "jumlah": 23500 },
+    { "semester": "2022-1", "jumlah": 23900 },
+    { "semester": "2022-2", "jumlah": 24200 },
+    { "semester": "2023-1", "jumlah": 24600 },
+    { "semester": "2023-2", "jumlah": 25000 },
+    { "semester": "2024-1", "jumlah": 25400 },
+    { "semester": "2024-2", "jumlah": 25800 },
+    { "semester": "2025-1", "jumlah": 26200 },
+    { "semester": "2025-2", "jumlah": 26600 }
   ],
   "transfer": [
     { "tahun": "2021", "internal": 45, "external": 32 },
@@ -161,11 +171,12 @@ Semua endpoint menerima parameter filter berikut:
 
 ## Endpoint 4: Mahasiswa Baru
 
-**`GET /api/mahasiswa/baru?tahun=2025&jalur=Semua&fakultas=Semua`**
+**`GET /api/mahasiswa/baru?semester=2025-2&jalur=Semua&fakultas=Semua&jenjang=Semua`**
 
 ```json
 {
-  "tahun": "2025",
+  "semester": "2025-2",
+  "jenjang": "Semua",
   "ringkasan": {
     "total": 5512,
     "dayaTampung": 6339,
@@ -184,15 +195,15 @@ Semua endpoint menerima parameter filter berikut:
       "afirmasi": 206
     }
   },
-  "topProdi": [
-    { "prodi": "Teknik Informatika", "jumlah": 520 },
-    { "prodi": "Manajemen", "jumlah": 460 },
-    { "prodi": "Hukum", "jumlah": 420 },
-    { "prodi": "Kedokteran", "jumlah": 380 },
-    { "prodi": "Ilmu Komunikasi", "jumlah": 340 },
-    { "prodi": "Akuntansi", "jumlah": 310 },
-    { "prodi": "Teknik Sipil", "jumlah": 280 },
-    { "prodi": "Pendidikan Matematika", "jumlah": 260 }
+  "rasioMinatProdi": [
+    { "prodi": "Teknik Informatika", "dayaTampung": 100, "peminat": 520, "rasio": 5.2 },
+    { "prodi": "Manajemen", "dayaTampung": 120, "peminat": 460, "rasio": 3.8 },
+    { "prodi": "Hukum", "dayaTampung": 80, "peminat": 420, "rasio": 5.3 },
+    { "prodi": "Kedokteran", "dayaTampung": 50, "peminat": 380, "rasio": 7.6 },
+    { "prodi": "Ilmu Komunikasi", "dayaTampung": 90, "peminat": 340, "rasio": 3.8 },
+    { "prodi": "Akuntansi", "dayaTampung": 100, "peminat": 310, "rasio": 3.1 },
+    { "prodi": "Teknik Sipil", "dayaTampung": 80, "peminat": 280, "rasio": 3.5 },
+    { "prodi": "Pendidikan Matematika", "dayaTampung": 70, "peminat": 260, "rasio": 3.7 }
   ],
   "asalWilayah": [
     { "wilayah": "Maluku", "jumlah": 3197 },
@@ -200,6 +211,18 @@ Semua endpoint menerima parameter filter berikut:
     { "wilayah": "Sulawesi", "jumlah": 661 },
     { "wilayah": "Jawa", "jumlah": 441 },
     { "wilayah": "Lainnya", "jumlah": 441 }
+  ],
+  "asalSekolah": [
+    { "sekolah": "SMAN 1 Ambon", "jumlah": 771 },
+    { "sekolah": "SMAN 2 Ambon", "jumlah": 606 },
+    { "sekolah": "SMAN 3 Ambon", "jumlah": 496 },
+    { "sekolah": "SMAN 5 Ambon", "jumlah": 386 },
+    { "sekolah": "SMKN 1 Ambon", "jumlah": 441 },
+    { "sekolah": "SMKN 2 Ambon", "jumlah": 331 },
+    { "sekolah": "SMA Xaverius Ambon", "jumlah": 386 },
+    { "sekolah": "MAN Ambon", "jumlah": 276 },
+    { "sekolah": "SMA Kristen Ambon", "jumlah": 220 },
+    { "sekolah": "Sekolah Lainnya", "jumlah": 1599 }
   ]
 }
 ```
@@ -208,11 +231,11 @@ Semua endpoint menerima parameter filter berikut:
 
 ## Endpoint 5: Lulusan
 
-**`GET /api/lulusan?periodeAkhir=2025&fakultas=Semua`**
+**`GET /api/lulusan?semester=2025-2&fakultas=Semua`**
 
 ```json
 {
-  "periodeAkhir": 2025,
+  "semester": "2025-2",
   "fakultas": "Semua",
   "ringkasan": {
     "totalTercatat": 106391,
@@ -220,47 +243,17 @@ Semua endpoint menerima parameter filter berikut:
     "ipkRataRata": 3.33,
     "totalCumlaude": 1784
   },
-  "perTahun": [
-    {
-      "tahun": "2021",
-      "totalLulusan": 4521,
-      "ipkRataRata": 3.32,
-      "lamaStudiRataRata": 4.8,
-      "tepatWaktuPersen": 90,
-      "cumlaude": 316
-    },
-    {
-      "tahun": "2022",
-      "totalLulusan": 4372,
-      "ipkRataRata": 3.32,
-      "lamaStudiRataRata": 4.6,
-      "tepatWaktuPersen": 90,
-      "cumlaude": 306
-    },
-    {
-      "tahun": "2023",
-      "totalLulusan": 6179,
-      "ipkRataRata": 3.31,
-      "lamaStudiRataRata": 3.9,
-      "tepatWaktuPersen": 90,
-      "cumlaude": 433
-    },
-    {
-      "tahun": "2024",
-      "totalLulusan": 5492,
-      "ipkRataRata": 3.30,
-      "lamaStudiRataRata": 3.7,
-      "tepatWaktuPersen": 90,
-      "cumlaude": 384
-    },
-    {
-      "tahun": "2025",
-      "totalLulusan": 4915,
-      "ipkRataRata": 3.38,
-      "lamaStudiRataRata": 4.0,
-      "tepatWaktuPersen": 90,
-      "cumlaude": 344
-    }
+  "perSemester": [
+    { "semester": "2021-1", "totalLulusan": 2200, "ipkRataRata": 3.30, "lamaStudiRataRata": 4.9, "tepatWaktuPersen": 90, "cumlaude": 154 },
+    { "semester": "2021-2", "totalLulusan": 2321, "ipkRataRata": 3.32, "lamaStudiRataRata": 4.8, "tepatWaktuPersen": 90, "cumlaude": 162 },
+    { "semester": "2022-1", "totalLulusan": 2100, "ipkRataRata": 3.31, "lamaStudiRataRata": 4.7, "tepatWaktuPersen": 90, "cumlaude": 147 },
+    { "semester": "2022-2", "totalLulusan": 2272, "ipkRataRata": 3.32, "lamaStudiRataRata": 4.6, "tepatWaktuPersen": 90, "cumlaude": 159 },
+    { "semester": "2023-1", "totalLulusan": 3000, "ipkRataRata": 3.29, "lamaStudiRataRata": 4.0, "tepatWaktuPersen": 90, "cumlaude": 210 },
+    { "semester": "2023-2", "totalLulusan": 3179, "ipkRataRata": 3.31, "lamaStudiRataRata": 3.9, "tepatWaktuPersen": 90, "cumlaude": 223 },
+    { "semester": "2024-1", "totalLulusan": 2700, "ipkRataRata": 3.28, "lamaStudiRataRata": 3.8, "tepatWaktuPersen": 90, "cumlaude": 189 },
+    { "semester": "2024-2", "totalLulusan": 2792, "ipkRataRata": 3.30, "lamaStudiRataRata": 3.7, "tepatWaktuPersen": 90, "cumlaude": 195 },
+    { "semester": "2025-1", "totalLulusan": 2400, "ipkRataRata": 3.36, "lamaStudiRataRata": 4.1, "tepatWaktuPersen": 90, "cumlaude": 168 },
+    { "semester": "2025-2", "totalLulusan": 2515, "ipkRataRata": 3.38, "lamaStudiRataRata": 4.0, "tepatWaktuPersen": 90, "cumlaude": 176 }
   ],
   "perFakultas": [
     { "fakultas": "FKIP", "totalLulusan": 9276 },
@@ -289,11 +282,11 @@ Semua endpoint menerima parameter filter berikut:
 
 ## Endpoint 6: Mahasiswa Keluar
 
-**`GET /api/mahasiswa/keluar?periodeAkhir=2025&fakultas=Semua`**
+**`GET /api/mahasiswa/keluar?semester=2025-2&fakultas=Semua`**
 
 ```json
 {
-  "periodeAkhir": 2025,
+  "semester": "2025-2",
   "fakultas": "Semua",
   "mutasiExternal": [
     { "tahun": "2021", "keluar": 85 },
@@ -351,11 +344,11 @@ Semua endpoint menerima parameter filter berikut:
 
 ## Endpoint 7: Pelaporan — CP1 (Awal Semester)
 
-**`GET /api/pelaporan/cp1?tahun=2025&fakultas=Semua`**
+**`GET /api/pelaporan/cp1?semester=2025-2&fakultas=Semua`**
 
 ```json
 {
-  "tahun": "2025",
+  "semester": "2025-2",
   "ringkasan": {
     "totalMahasiswa": 2835,
     "krsDisetujui": 2325,
@@ -401,11 +394,11 @@ Semua endpoint menerima parameter filter berikut:
 
 ## Endpoint 8: Pelaporan — CP2 (Akhir Semester)
 
-**`GET /api/pelaporan/cp2?tahun=2025&fakultas=Semua`**
+**`GET /api/pelaporan/cp2?semester=2025-2&fakultas=Semua`**
 
 ```json
 {
-  "tahun": "2025",
+  "semester": "2025-2",
   "ringkasan": {
     "totalMataKuliah": 4410,
     "sudahFinalisasi": 3749,
@@ -419,11 +412,11 @@ Semua endpoint menerima parameter filter berikut:
     { "grade": "E", "jumlah": 221 }
   ],
   "trenIPSIPK": [
-    { "semester": "Ganjil 2023", "ips": 3.08, "ipk": 3.10 },
-    { "semester": "Genap 2023", "ips": 3.12, "ipk": 3.11 },
-    { "semester": "Ganjil 2024", "ips": 3.15, "ipk": 3.13 },
-    { "semester": "Genap 2024", "ips": 3.18, "ipk": 3.15 },
-    { "semester": "Ganjil 2025", "ips": 3.22, "ipk": 3.17 }
+    { "semester": "2023-2", "ips": 3.08, "ipk": 3.10 },
+    { "semester": "2024-1", "ips": 3.12, "ipk": 3.11 },
+    { "semester": "2024-2", "ips": 3.15, "ipk": 3.13 },
+    { "semester": "2025-1", "ips": 3.18, "ipk": 3.15 },
+    { "semester": "2025-2", "ips": 3.22, "ipk": 3.17 }
   ],
   "perProdi": [
     {
@@ -461,11 +454,25 @@ Semua endpoint menerima parameter filter berikut:
 | 1 | `/api/dashboard/beranda` | GET | Ringkasan KPI halaman utama |
 | 2 | `/api/penerimaan` | GET | Data pendaftar per jalur (SNBP/SNBT/Mandiri) |
 | 3 | `/api/mahasiswa/aktif` | GET | Mahasiswa aktif, jenjang, fakultas, IPK, transfer |
-| 4 | `/api/mahasiswa/baru` | GET | Mahasiswa baru, jalur, prodi, asal wilayah |
-| 5 | `/api/lulusan` | GET | Data lulusan, IPK, lama studi, per fakultas |
+| 4 | `/api/mahasiswa/baru` | GET | Mahasiswa baru, jalur, prodi, rasio minat, asal wilayah & sekolah |
+| 5 | `/api/lulusan` | GET | Data lulusan per semester, IPK, lama studi, per fakultas |
 | 6 | `/api/mahasiswa/keluar` | GET | Mutasi, dropout, wafat, mengundurkan diri |
 | 7 | `/api/pelaporan/cp1` | GET | Checkpoint 1 — registrasi, KRS, aktivitas kuliah |
 | 8 | `/api/pelaporan/cp2` | GET | Checkpoint 2 — finalisasi nilai, komposisi, IPS/IPK |
+
+---
+
+## Perubahan dari Versi Sebelumnya
+
+| Perubahan | Sebelumnya | Sekarang |
+|-----------|-----------|----------|
+| Filter utama | `tahun` (2025) + `semester` (Ganjil/Genap) | `semester` (2025-2) — digabung jadi satu parameter |
+| Filter jenjang | Tidak ada | `jenjang` (S1/S2/S3/D3/Profesi) |
+| Tren mahasiswa aktif | 5 data per tahun | 10 data per semester (2021-1 s/d 2025-2) |
+| Lulusan | `perTahun` (5 data) | `perSemester` (10 data) |
+| Tren IPS/IPK | Label "Ganjil 2023" | Label "2023-2" |
+| **[BARU]** Rasio minat prodi | Tidak ada | `rasioMinatProdi` (daya tampung, peminat, rasio) |
+| **[BARU]** Asal sekolah | Tidak ada | `asalSekolah` (sekolah-sekolah di Kota Ambon) |
 
 ---
 
@@ -477,6 +484,7 @@ Semua endpoint menerima parameter filter berikut:
 > - Nama field menggunakan **camelCase**
 > - API harus mendukung **CORS** agar bisa diakses oleh frontend
 > - Disarankan menggunakan **HTTPS**
+> - Format semester: `YYYY-N` dimana N=1 (Ganjil) atau N=2 (Genap)
 
 > [!TIP]
 > - Jika ada field yang belum tersedia di database, bisa dikosongkan dengan `null`
