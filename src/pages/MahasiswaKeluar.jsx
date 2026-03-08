@@ -6,6 +6,19 @@ import {
 
 const fmt = (n) => { try { return Number(n).toLocaleString("id-ID"); } catch { return n; } };
 
+/* Semester options */
+const SEMESTERS = [];
+for (let y = 2021; y <= 2025; y++) {
+  SEMESTERS.push(`${y}-1`);
+  SEMESTERS.push(`${y}-2`);
+}
+
+function semesterFactor(sem) {
+  const [y, s] = sem.split("-").map(Number);
+  const idx = (y - 2021) * 2 + (s - 1);
+  return 0.90 + idx * 0.02;
+}
+
 function ChartCard({ title, right, ribbon, children }) {
   return (
     <div className="u-card" style={{ overflow: "hidden", padding: 0 }}>
@@ -32,38 +45,49 @@ function Kpi({ label, value, hint, variant = "blue" }) {
 }
 
 export default function MahasiswaKeluar() {
-  const [periodeAkhir, setPeriodeAkhir] = useState(2025);
+  const [semester, setSemester] = useState("2025-2");
   const [fakultas, setFakultas] = useState("Semua");
   const [statusKeluar, setStatusKeluar] = useState("Semua");
-  const [section, setSection] = useState("lulusan"); // lulusan | mutasi | status
+  const [section, setSection] = useState("lulusan");
 
   const vm = useMemo(() => {
-    const years = Array.from({ length: 6 }, (_, i) => periodeAkhir - 5 + i);
     const facW = { Semua:1, Hukum:0.22, Teknik:0.28, Ekonomi:0.24, FISIP:0.18, Kedokteran:0.08 };
     const ff = facW[fakultas] ?? 1;
-
-    const lulusanRaw = { 2020:0, 2021:4521, 2022:4372, 2023:6179, 2024:5492, 2025:4915 };
-    const ipkRaw    = { 2020:0, 2021:3.32, 2022:3.32, 2023:3.31, 2024:3.30, 2025:3.38 };
-    const lamaRaw   = { 2020:0, 2021:4.8, 2022:4.6, 2023:3.9, 2024:3.7, 2025:4.0 };
     const ipkBias = fakultas === "Kedokteran" ? 0.06 : fakultas === "Teknik" ? -0.04 : 0;
     const lamaBias = fakultas === "Teknik" ? 0.20 : fakultas === "Kedokteran" ? 0.15 : 0;
     const cumlaudeRate = fakultas === "Kedokteran" ? 0.10 : 0.07;
-    const tepatRate = fakultas === "Kedokteran" ? 0.90 : 0.90;
+    const tepatRate = 0.90;
 
-    const lulusanByYear = years.map(y => {
-      const total = Math.round((lulusanRaw[y] ?? 0) * ff);
-      const ipk = (ipkRaw[y] ?? 0) ? Number(((ipkRaw[y] ?? 0) + ipkBias).toFixed(2)) : 0;
-      const lama = (lamaRaw[y] ?? 0) ? Number(((lamaRaw[y] ?? 0) + lamaBias).toFixed(1)) : 0;
-      const tepat = y === 2020 ? 0 : Math.round(tepatRate * 100);
-      const cumlaude = y === 2020 ? 0 : Math.round(total * cumlaudeRate);
-      return { year: String(y), total, ipk, lama, tepat, cumlaude };
+    const lulusanRaw = {
+      "2021-1": 2200, "2021-2": 2321, "2022-1": 2100, "2022-2": 2272,
+      "2023-1": 3000, "2023-2": 3179, "2024-1": 2700, "2024-2": 2792,
+      "2025-1": 2400, "2025-2": 2515,
+    };
+    const ipkRaw = {
+      "2021-1": 3.30, "2021-2": 3.32, "2022-1": 3.31, "2022-2": 3.32,
+      "2023-1": 3.29, "2023-2": 3.31, "2024-1": 3.28, "2024-2": 3.30,
+      "2025-1": 3.36, "2025-2": 3.38,
+    };
+    const lamaRaw = {
+      "2021-1": 4.9, "2021-2": 4.8, "2022-1": 4.7, "2022-2": 4.6,
+      "2023-1": 4.0, "2023-2": 3.9, "2024-1": 3.8, "2024-2": 3.7,
+      "2025-1": 4.1, "2025-2": 4.0,
+    };
+
+    const lulusanBySemester = SEMESTERS.map(sem => {
+      const total = Math.round((lulusanRaw[sem] ?? 0) * ff);
+      const ipk = (ipkRaw[sem] ?? 0) ? Number(((ipkRaw[sem] ?? 0) + ipkBias).toFixed(2)) : 0;
+      const lama = (lamaRaw[sem] ?? 0) ? Number(((lamaRaw[sem] ?? 0) + lamaBias).toFixed(1)) : 0;
+      const tepat = Math.round(tepatRate * 100);
+      const cumlaude = Math.round(total * cumlaudeRate);
+      return { semester: sem, total, ipk, lama, tepat, cumlaude };
     });
 
     const totalTercatat = 106391;
-    const total5 = lulusanByYear.slice(1).reduce((a, b) => a + b.total, 0);
-    const ipkList = lulusanByYear.slice(1).map(x => x.ipk).filter(x => x > 0);
+    const total5 = lulusanBySemester.reduce((a, b) => a + b.total, 0);
+    const ipkList = lulusanBySemester.map(x => x.ipk).filter(x => x > 0);
     const ipkAvg = ipkList.length ? Number((ipkList.reduce((a, b) => a + b, 0) / ipkList.length).toFixed(2)) : 0;
-    const cumlaude5 = lulusanByYear.slice(1).reduce((a, b) => a + b.cumlaude, 0);
+    const cumlaude5 = lulusanBySemester.reduce((a, b) => a + b.cumlaude, 0);
 
     const perFakultas = ["FKIP","FEB","Hukum","FISIP","Teknik","Kedokteran","Pertanian","Perikanan"]
       .map((f, i) => ({ fakultas: f, total: Math.round(Math.max(120, 4500 / (i + 1)) * ff) }));
@@ -75,33 +99,24 @@ export default function MahasiswaKeluar() {
       { range: "3.5 - 4.0", value: Math.round(total5 * 0.35) },
     ];
 
-    // Mutasi External (keluar)
-    const mutasiExternal = [
-      { tahun: "2021", keluar: Math.round(85 * ff) },
-      { tahun: "2022", keluar: Math.round(92 * ff) },
-      { tahun: "2023", keluar: Math.round(78 * ff) },
-      { tahun: "2024", keluar: Math.round(95 * ff) },
-      { tahun: "2025", keluar: Math.round(88 * ff) },
-    ];
+    const mutasiExternal = SEMESTERS.filter(s => s.endsWith("-1")).map((sem, i) => {
+      const y = sem.split("-")[0];
+      return { tahun: y, keluar: Math.round((85 + i * 3) * ff) };
+    });
 
-    // Status keluar lainnya
     const statusData = [
-      { tahun: "2021", wafat: 3, dropout: 45, mutasi: 85, mengundurkan_diri: 120, prodi: "Berbagai", fakultas: "Semua" },
-      { tahun: "2022", wafat: 2, dropout: 52, mutasi: 92, mengundurkan_diri: 135, prodi: "Berbagai", fakultas: "Semua" },
-      { tahun: "2023", wafat: 4, dropout: 48, mutasi: 78, mengundurkan_diri: 110, prodi: "Berbagai", fakultas: "Semua" },
-      { tahun: "2024", wafat: 1, dropout: 55, mutasi: 95, mengundurkan_diri: 142, prodi: "Berbagai", fakultas: "Semua" },
-      { tahun: "2025", wafat: 2, dropout: 50, mutasi: 88, mengundurkan_diri: 128, prodi: "Berbagai", fakultas: "Semua" },
+      { tahun: "2021", wafat: 3, dropout: 45, mutasi: 85, mengundurkan_diri: 120 },
+      { tahun: "2022", wafat: 2, dropout: 52, mutasi: 92, mengundurkan_diri: 135 },
+      { tahun: "2023", wafat: 4, dropout: 48, mutasi: 78, mengundurkan_diri: 110 },
+      { tahun: "2024", wafat: 1, dropout: 55, mutasi: 95, mengundurkan_diri: 142 },
+      { tahun: "2025", wafat: 2, dropout: 50, mutasi: 88, mengundurkan_diri: 128 },
     ].map(r => ({
       ...r,
       total: r.wafat + r.dropout + r.mutasi + r.mengundurkan_diri,
     }));
 
-    const filteredStatus = statusKeluar === "Semua"
-      ? statusData
-      : statusData.map(r => ({ ...r, highlighted: r[statusKeluar] ?? 0 }));
-
-    return { years, lulusanByYear, totalTercatat, total5, ipkAvg, cumlaude5, perFakultas, ipkDist, mutasiExternal, statusData, filteredStatus };
-  }, [periodeAkhir, fakultas, statusKeluar]);
+    return { lulusanBySemester, totalTercatat, total5, ipkAvg, cumlaude5, perFakultas, ipkDist, mutasiExternal, statusData };
+  }, [semester, fakultas, statusKeluar]);
 
   return (
     <div className="u-stack">
@@ -112,12 +127,12 @@ export default function MahasiswaKeluar() {
           padding: "22px 20px", color: "#fff", textAlign: "center",
         }}>
           <div style={{ fontSize: 28, fontWeight: 900 }}>Mahasiswa Keluar</div>
-          <div style={{ fontSize: 15, opacity: 0.9 }}>Periode {vm.years[0]} – {vm.years[5]}</div>
+          <div style={{ fontSize: 15, opacity: 0.9 }}>Data per semester (2021-1 s/d 2025-2)</div>
         </div>
         <div style={{ padding: 12, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
           <div className="u-filters">
-            <label>Periode Akhir <select className="u-select" value={periodeAkhir} onChange={e => setPeriodeAkhir(Number(e.target.value))}>
-              {[2025,2024,2023,2022].map(y => <option key={y} value={y}>{y}</option>)}
+            <label>Semester <select className="u-select" value={semester} onChange={e => setSemester(e.target.value)}>
+              {SEMESTERS.slice().reverse().map(s => <option key={s} value={s}>{s}</option>)}
             </select></label>
             <label>Fakultas <select className="u-select" value={fakultas} onChange={e => setFakultas(e.target.value)}>
               <option value="Semua">Semua</option>
@@ -144,11 +159,11 @@ export default function MahasiswaKeluar() {
         </div>
 
         <div className="u-grid-2">
-          <ChartCard title="Jumlah Lulusan 5 Tahun Terakhir" ribbon="blue">
+          <ChartCard title="Tren Lulusan Per Semester (5 Tahun)" ribbon="blue">
             <div style={{ height: 300 }}>
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={vm.lulusanByYear}>
-                  <CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="year" /><YAxis />
+                <LineChart data={vm.lulusanBySemester}>
+                  <CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="semester" tick={{ fontSize: 10 }} /><YAxis />
                   <Tooltip formatter={v => fmt(v)} />
                   <Line type="monotone" dataKey="total" name="Lulusan" stroke="#3b82f6" strokeWidth={3} dot />
                 </LineChart>
@@ -171,11 +186,11 @@ export default function MahasiswaKeluar() {
         </div>
 
         <div className="u-grid-2">
-          <ChartCard title="Rata-rata Lama Studi" ribbon="orange">
+          <ChartCard title="Rata-rata Lama Studi Per Semester" ribbon="orange">
             <div style={{ height: 300 }}>
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={vm.lulusanByYear}>
-                  <CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="year" /><YAxis />
+                <AreaChart data={vm.lulusanBySemester}>
+                  <CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="semester" tick={{ fontSize: 10 }} /><YAxis />
                   <Tooltip />
                   <Area type="monotone" dataKey="lama" name="Lama Studi (Thn)" stroke="#fb923c" fill="#fed7aa" strokeWidth={3} />
                 </AreaChart>
@@ -198,16 +213,16 @@ export default function MahasiswaKeluar() {
 
         {/* Tabel Lulusan */}
         <div className="u-card" style={{ overflow: "hidden", padding: 0 }}>
-          <div className="lulusan-table-title">Tabel Ringkas Lulusan</div>
-          <div style={{ padding: 14 }}>
+          <div className="lulusan-table-title">Tabel Ringkas Lulusan Per Semester</div>
+          <div style={{ padding: 14, overflowX: "auto" }}>
             <table className="u-table">
               <thead><tr>
-                <th>Tahun</th><th>Total Lulusan</th><th>Rata-rata IPK</th><th>Rata-rata Lama Studi</th><th>Tepat Waktu (%)</th><th>Cumlaude</th>
+                <th>Semester</th><th>Total Lulusan</th><th>Rata-rata IPK</th><th>Rata-rata Lama Studi</th><th>Tepat Waktu (%)</th><th>Cumlaude</th>
               </tr></thead>
               <tbody>
-                {vm.lulusanByYear.slice().reverse().map(r => (
-                  <tr key={r.year}>
-                    <td style={{ fontWeight: 800 }}>{r.year}</td>
+                {vm.lulusanBySemester.slice().reverse().map(r => (
+                  <tr key={r.semester}>
+                    <td style={{ fontWeight: 800 }}>{r.semester}</td>
                     <td>{fmt(r.total)}</td>
                     <td>{r.ipk ? r.ipk.toFixed(2) : "-"}</td>
                     <td>{r.lama ? `${r.lama} thn` : "-"}</td>

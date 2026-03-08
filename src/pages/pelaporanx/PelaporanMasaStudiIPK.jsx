@@ -1,10 +1,23 @@
 import { useMemo, useState } from "react";
 import {
-  ResponsiveContainer, BarChart, Bar, LineChart, Line,
+  ResponsiveContainer, BarChart, Bar, LineChart, Line, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from "recharts";
 
 const fmt = (n) => { try { return Number(n).toLocaleString("id-ID"); } catch { return n; } };
+
+/* Semester options */
+const SEMESTERS = [];
+for (let y = 2021; y <= 2025; y++) {
+  SEMESTERS.push(`${y}-1`);
+  SEMESTERS.push(`${y}-2`);
+}
+
+function semesterFactor(sem) {
+  const [y, s] = sem.split("-").map(Number);
+  const idx = (y - 2021) * 2 + (s - 1);
+  return 0.90 + idx * 0.02;
+}
 
 function ChartCard({ title, right, children }) {
   return (
@@ -31,15 +44,15 @@ function Kpi({ label, value, hint, variant = "blue" }) {
 const GRADE_COLORS = { A: "#22c55e", B: "#3b82f6", C: "#f59e0b", D: "#ef4444", E: "#64748b" };
 
 export default function PelaporanCP2() {
-  const [tahun, setTahun] = useState("2025");
+  const [semester, setSemester] = useState("2025-2");
   const [fakultas, setFakultas] = useState("Semua");
 
   const vm = useMemo(() => {
-    const yf = tahun === "2025" ? 1.05 : tahun === "2024" ? 1 : 0.92;
+    const sf = semesterFactor(semester);
     const facW = { Semua:1, FKIP:0.28, FEB:0.22, FT:0.19, FH:0.16, FISIP:0.15 };
     const ff = facW[fakultas] ?? 1;
 
-    const totalMk = Math.round(4200 * yf * ff);
+    const totalMk = Math.round(4200 * sf * ff);
     const sudahFinalisasi = Math.round(totalMk * 0.85);
     const belumFinalisasi = totalMk - sudahFinalisasi;
 
@@ -51,13 +64,12 @@ export default function PelaporanCP2() {
       { grade: "E",  value: Math.round(totalMk * 0.05) },
     ];
 
-    const ipsTrend = [
-      { semester: "Ganjil 2023", ips: 3.08, ipk: 3.10 },
-      { semester: "Genap 2023",  ips: 3.12, ipk: 3.11 },
-      { semester: "Ganjil 2024", ips: 3.15, ipk: 3.13 },
-      { semester: "Genap 2024",  ips: 3.18, ipk: 3.15 },
-      { semester: "Ganjil 2025", ips: 3.22, ipk: 3.17 },
-    ];
+    // IPS/IPK trend per semester
+    const ipsTrend = SEMESTERS.slice(-5).map((sem, i) => ({
+      semester: sem,
+      ips: Number((3.08 + i * 0.035).toFixed(2)),
+      ipk: Number((3.10 + i * 0.02).toFixed(2)),
+    }));
 
     const prodiTable = [
       { prodi: "Teknik Informatika", nilaiA: 320, nilaiB: 410, nilaiC: 240, nilaiD: 95, nilaiE: 35, ips: 3.24, ipk: 3.18 },
@@ -71,7 +83,7 @@ export default function PelaporanCP2() {
     }));
 
     return { totalMk, sudahFinalisasi, belumFinalisasi, komposisiNilai, ipsTrend, prodiTable };
-  }, [tahun, fakultas]);
+  }, [semester, fakultas]);
 
   return (
     <div className="u-stack">
@@ -82,8 +94,8 @@ export default function PelaporanCP2() {
           <div className="u-text-muted u-text-sm">Finalisasi nilai, komposisi A–E, dan tren IPS/IPK</div>
         </div>
         <div className="u-filters">
-          <label>Tahun <select className="u-select" value={tahun} onChange={e => setTahun(e.target.value)}>
-            <option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option>
+          <label>Semester <select className="u-select" value={semester} onChange={e => setSemester(e.target.value)}>
+            {SEMESTERS.slice().reverse().map(s => <option key={s} value={s}>{s}</option>)}
           </select></label>
           <label>Fakultas <select className="u-select" value={fakultas} onChange={e => setFakultas(e.target.value)}>
             <option value="Semua">Semua</option>
@@ -101,7 +113,7 @@ export default function PelaporanCP2() {
 
       {/* Charts */}
       <div className="u-grid-2">
-        <ChartCard title="Komposisi Nilai A–E" right={<span className="u-badge u-badge--blue">Semester Ini</span>}>
+        <ChartCard title="Komposisi Nilai A–E" right={<span className="u-badge u-badge--blue">Semester {semester}</span>}>
           <div style={{ height: 300 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={vm.komposisiNilai} barCategoryGap={18}>
@@ -111,9 +123,7 @@ export default function PelaporanCP2() {
                 <Tooltip formatter={v => fmt(v)} />
                 <Bar dataKey="value" name="Jumlah" radius={[6,6,0,0]}>
                   {vm.komposisiNilai.map((d) => (
-                    <BarChart key={d.grade}>
-                      {/* handled via fill array */}
-                    </BarChart>
+                    <Cell key={d.grade} fill={GRADE_COLORS[d.grade]} />
                   ))}
                 </Bar>
               </BarChart>
@@ -148,7 +158,7 @@ export default function PelaporanCP2() {
 
       {/* Tabel per Prodi */}
       <div className="u-card" style={{ overflow: "hidden", padding: 0 }}>
-        <div className="lulusan-table-title">Tabel Ringkas CP2 — Per Program Studi</div>
+        <div className="lulusan-table-title">Tabel Ringkas CP2 — Per Program Studi (Semester {semester})</div>
         <div style={{ padding: 14, overflowX: "auto" }}>
           <table className="u-table">
             <thead><tr>

@@ -10,6 +10,16 @@ const COLORS = ["#1e5aa8","#3b82f6","#60a5fa","#93c5fd","#6366f1","#8b5cf6"];
 const FAC_COLORS = { Hukum:"#6366f1", Teknik:"#2563eb", FKIP:"#0ea5e9", FEB:"#16a34a", FISIP:"#f59e0b", Kedokteran:"#ef4444", Pertanian:"#22c55e", Perikanan:"#14b8a6" };
 const STATUS_COLORS = ["#1e5aa8","#22c55e","#f59e0b","#ef4444","#8b5cf6"];
 
+/* Semester options: 2021-1 s.d 2025-2 */
+const SEMESTERS = [];
+for (let y = 2021; y <= 2025; y++) {
+  SEMESTERS.push(`${y}-1`);
+  SEMESTERS.push(`${y}-2`);
+}
+
+const JENJANG_LIST = ["Semua", "S1", "S2", "S3", "D3", "Profesi"];
+const JENJANG_WEIGHTS = { Semua: 1, S1: 0.78, S2: 0.10, S3: 0.02, D3: 0.04, Profesi: 0.06 };
+
 /* ──── charts ──── */
 function ChartCard({ title, right, children }) {
   return (
@@ -47,38 +57,48 @@ function KpiFlat({ label, value, hint, bg }) {
   );
 }
 
+/* ──── helper to parse semester ──── */
+function semesterFactor(sem) {
+  const [y, s] = sem.split("-").map(Number);
+  // linear growth factor from 2021-1 (base) to 2025-2
+  const idx = (y - 2021) * 2 + (s - 1); // 0..9
+  return 0.90 + idx * 0.02; // 0.90 to 1.08
+}
+
 /* ──── page ──── */
 export default function MahasiswaAktif() {
-  const [tahun, setTahun] = useState("2025");
+  const [semester, setSemester] = useState("2025-2");
   const [fakultas, setFakultas] = useState("Semua");
+  const [jenjang, setJenjang] = useState("Semua");
 
   const vm = useMemo(() => {
-    const yf = tahun === "2025" ? 1.05 : tahun === "2024" ? 1 : 0.92;
+    const sf = semesterFactor(semester);
     const FAC_W = { Semua:1, Hukum:0.12, Teknik:0.16, FKIP:0.22, FEB:0.15, FISIP:0.10, Kedokteran:0.06, Pertanian:0.10, Perikanan:0.09 };
     const ff = FAC_W[fakultas] ?? 1;
+    const jf = JENJANG_WEIGHTS[jenjang] ?? 1;
 
-    const aktif    = Math.round(26000 * yf * ff);
+    const aktif    = Math.round(26000 * sf * ff * jf);
     const nonaktif = Math.round(aktif * 0.08);
     const cuti     = Math.round(aktif * 0.03);
-    const ipk      = (3.12 + (tahun === "2025" ? 0.04 : tahun === "2023" ? -0.03 : 0)).toFixed(2);
+    const ipk      = (3.12 + (sf > 1.04 ? 0.04 : sf < 0.94 ? -0.03 : 0)).toFixed(2);
 
     const byJenjang = [
-      { name: "S1", value: Math.round(aktif * 0.78) },
-      { name: "S2", value: Math.round(aktif * 0.10) },
-      { name: "S3", value: Math.round(aktif * 0.02) },
-      { name: "Profesi", value: Math.round(aktif * 0.06) },
-      { name: "D3", value: Math.round(aktif * 0.04) },
+      { name: "S1", value: Math.round(26000 * sf * ff * 0.78) },
+      { name: "S2", value: Math.round(26000 * sf * ff * 0.10) },
+      { name: "S3", value: Math.round(26000 * sf * ff * 0.02) },
+      { name: "Profesi", value: Math.round(26000 * sf * ff * 0.06) },
+      { name: "D3", value: Math.round(26000 * sf * ff * 0.04) },
     ];
 
     const barFakultas = [
-      { name: "FKIP",    value: Math.round(5600 * yf) },
-      { name: "FEB",     value: Math.round(3900 * yf) },
-      { name: "Teknik",  value: Math.round(4200 * yf) },
-      { name: "Hukum",   value: Math.round(3100 * yf) },
-      { name: "FISIP",   value: Math.round(2600 * yf) },
-      { name: "Kedokteran", value: Math.round(1500 * yf) },
-      { name: "Pertanian",  value: Math.round(2700 * yf) },
-      { name: "Perikanan",  value: Math.round(2400 * yf) },
+      { name: "FKIP",    value: Math.round(5600 * sf * jf) },
+      { name: "FEB",     value: Math.round(3900 * sf * jf) },
+      { name: "Teknik",  value: Math.round(4200 * sf * jf) },
+      { name: "Hukum",   value: Math.round(3100 * sf * jf) },
+      { name: "FISIP",   value: Math.round(2600 * sf * jf) },
+      { name: "Kedokteran", value: Math.round(1500 * sf * jf) },
+      { name: "Pertanian",  value: Math.round(2700 * sf * jf) },
+      { name: "Perikanan",  value: Math.round(2400 * sf * jf) },
     ];
 
     const statusSemester = [
@@ -89,13 +109,11 @@ export default function MahasiswaAktif() {
       { name: "Cuti",          value: cuti },
     ];
 
-    const trenAktif = [
-      { tahun: "2021", value: Math.round(23500 * ff) },
-      { tahun: "2022", value: Math.round(24200 * ff) },
-      { tahun: "2023", value: Math.round(25000 * ff) },
-      { tahun: "2024", value: Math.round(25800 * ff) },
-      { tahun: "2025", value: Math.round(26600 * ff) },
-    ];
+    // Tren per semester (2021-1 s/d 2025-2)
+    const trenAktif = SEMESTERS.map(sem => {
+      const f = semesterFactor(sem);
+      return { semester: sem, value: Math.round(26000 * f * ff * jf) };
+    });
 
     const ipkBar = [
       { range: "< 2.0",      value: Math.round(aktif * 0.02) },
@@ -105,13 +123,10 @@ export default function MahasiswaAktif() {
       { range: "3.5 - 4.0",  value: Math.round(aktif * 0.26) },
     ];
 
-    const transfer = [
-      { tahun: "2021", internal: 45, external: 32 },
-      { tahun: "2022", internal: 52, external: 38 },
-      { tahun: "2023", internal: 48, external: 41 },
-      { tahun: "2024", internal: 55, external: 45 },
-      { tahun: "2025", internal: 60, external: 50 },
-    ];
+    const transfer = SEMESTERS.filter(s => s.endsWith("-1")).map((sem, i) => {
+      const y = sem.split("-")[0];
+      return { tahun: y, internal: 45 + i * 5, external: 32 + i * 4 };
+    });
 
     const ipkSks = [
       { range: "< 2.0",      sks: 16 },
@@ -130,7 +145,7 @@ export default function MahasiswaAktif() {
     ];
 
     return { aktif, nonaktif, cuti, ipk, byJenjang, barFakultas, statusSemester, trenAktif, ipkBar, transfer, ipkSks, jenjangFlat };
-  }, [tahun, fakultas]);
+  }, [semester, fakultas, jenjang]);
 
   return (
     <div className="u-stack">
@@ -138,15 +153,18 @@ export default function MahasiswaAktif() {
       <div className="u-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
         <div>
           <div style={{ fontSize: 18, fontWeight: 900 }}>Mahasiswa Aktif</div>
-          <div className="u-text-muted u-text-sm">Data mahasiswa aktif per tahun akademik</div>
+          <div className="u-text-muted u-text-sm">Data mahasiswa aktif per semester berjalan</div>
         </div>
         <div className="u-filters">
-          <label>Tahun <select className="u-select" value={tahun} onChange={e => setTahun(e.target.value)}>
-            <option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option>
+          <label>Semester <select className="u-select" value={semester} onChange={e => setSemester(e.target.value)}>
+            {SEMESTERS.slice().reverse().map(s => <option key={s} value={s}>{s}</option>)}
           </select></label>
           <label>Fakultas <select className="u-select" value={fakultas} onChange={e => setFakultas(e.target.value)}>
             <option value="Semua">Semua</option>
             {Object.keys(FAC_COLORS).map(f => <option key={f} value={f}>{f}</option>)}
+          </select></label>
+          <label>Jenjang <select className="u-select" value={jenjang} onChange={e => setJenjang(e.target.value)}>
+            {JENJANG_LIST.map(j => <option key={j} value={j}>{j}</option>)}
           </select></label>
         </div>
       </div>
@@ -174,9 +192,9 @@ export default function MahasiswaAktif() {
             <ChartCard title="Mahasiswa Aktif Berdasarkan Angkatan">
               <div style={{ height: 300 }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={vm.trenAktif}>
+                  <BarChart data={vm.trenAktif.slice(-5)}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="tahun" />
+                    <XAxis dataKey="semester" tick={{ fontSize: 11 }} />
                     <YAxis />
                     <Tooltip formatter={v => fmt(v)} />
                     <Bar dataKey="value" fill="#1e5aa8" radius={[6,6,0,0]} />
@@ -186,13 +204,13 @@ export default function MahasiswaAktif() {
             </ChartCard>
           </div>
 
-          {/* Tren Mahasiswa Aktif */}
-          <ChartCard title="Tren Mahasiswa Aktif (5 Tahun)">
+          {/* Tren Mahasiswa Aktif per Semester */}
+          <ChartCard title="Tren Mahasiswa Aktif (Per Semester, 2021-1 s/d 2025-2)">
             <div style={{ height: 280 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={vm.trenAktif}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="tahun" />
+                  <XAxis dataKey="semester" tick={{ fontSize: 10 }} />
                   <YAxis />
                   <Tooltip formatter={v => fmt(v)} />
                   <Line type="monotone" dataKey="value" stroke="#22c55e" strokeWidth={3} dot={{ r: 4 }} />
@@ -204,9 +222,9 @@ export default function MahasiswaAktif() {
 
         {/* RIGHT KPI */}
         <div className="u-stack">
-          <Kpi label="👥 Mahasiswa Aktif" value={fmt(vm.aktif)} hint={`Tahun ${tahun}`} variant="green" />
+          <Kpi label="👥 Mahasiswa Aktif" value={fmt(vm.aktif)} hint={`Semester ${semester}`} variant="green" />
           <Kpi label="📋 Mahasiswa Isi KRS" value={fmt(Math.round(vm.aktif * 0.82))} variant="sky" />
-          <Kpi label="🆕 Mahasiswa Baru" value={fmt(Math.round(vm.aktif * 0.18))} hint={`T.A ${tahun} / ${Number(tahun)+1}`} variant="brown" />
+          <Kpi label="🆕 Mahasiswa Baru" value={fmt(Math.round(vm.aktif * 0.18))} hint={`Semester ${semester}`} variant="brown" />
           <Kpi label="❌ Mahasiswa Non Aktif" value={fmt(vm.nonaktif)} variant="red" />
           <Kpi label="⏸️ Mahasiswa Cuti" value={fmt(vm.cuti)} variant="amber" />
           <Kpi label="📊 IPK Rata-rata" value={vm.ipk} variant="purple" />
@@ -219,7 +237,7 @@ export default function MahasiswaAktif() {
       {/* KPI Flat Cards (jenjang) */}
       <div className="u-grid-5">
         {vm.jenjangFlat.map(k => (
-          <KpiFlat key={k.label} label={k.label} value={fmt(k.value)} hint={`Data Tahun ${tahun}`} bg={k.bg} />
+          <KpiFlat key={k.label} label={k.label} value={fmt(k.value)} hint={`Semester ${semester}`} bg={k.bg} />
         ))}
       </div>
 

@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 
 import DashboardHome from "./pages/DashboardHome";
 import AkademikLayout from "./layouts/AkademikLayout";
+import ComingSoon from "./pages/ComingSoon";
 
 import Beranda from "./pages/Beranda";
 import MahasiswaAktif from "./pages/MahasiswaAktif";
@@ -15,6 +16,12 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<DashboardHome />} />
+
+      {/* Coming Soon modules */}
+      <Route path="/sdm" element={<ComingSoon moduleKey="sdm" />} />
+      <Route path="/beasiswa" element={<ComingSoon moduleKey="beasiswa" />} />
+      <Route path="/akreditasi" element={<ComingSoon moduleKey="akreditasi" />} />
+      <Route path="/keuangan" element={<ComingSoon moduleKey="keuangan" />} />
 
       <Route path="/akademik" element={<AkademikLayout />}>
         <Route index element={<Navigate to="beranda" replace />} />

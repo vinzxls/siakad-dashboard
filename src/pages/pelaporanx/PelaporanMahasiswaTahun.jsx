@@ -2,6 +2,19 @@ import { useMemo, useState } from "react";
 
 const fmt = (n) => { try { return Number(n).toLocaleString("id-ID"); } catch { return n; } };
 
+/* Semester options */
+const SEMESTERS = [];
+for (let y = 2021; y <= 2025; y++) {
+  SEMESTERS.push(`${y}-1`);
+  SEMESTERS.push(`${y}-2`);
+}
+
+function semesterFactor(sem) {
+  const [y, s] = sem.split("-").map(Number);
+  const idx = (y - 2021) * 2 + (s - 1);
+  return 0.90 + idx * 0.02;
+}
+
 function Kpi({ label, value, hint, variant = "blue" }) {
   return (
     <div className={`u-kpi u-kpi--${variant}`}>
@@ -13,11 +26,11 @@ function Kpi({ label, value, hint, variant = "blue" }) {
 }
 
 export default function PelaporanCP1() {
-  const [tahun, setTahun] = useState("2025");
+  const [semester, setSemester] = useState("2025-2");
   const [fakultas, setFakultas] = useState("Semua");
 
   const vm = useMemo(() => {
-    const yf = tahun === "2025" ? 1.05 : tahun === "2024" ? 1 : 0.92;
+    const sf = semesterFactor(semester);
     const facW = { Semua:1, FKIP:0.28, FEB:0.22, FT:0.19, FH:0.16, FISIP:0.15 };
     const ff = facW[fakultas] ?? 1;
 
@@ -33,7 +46,7 @@ export default function PelaporanCP1() {
     ];
 
     const rows = prodiList.map((p, i) => {
-      const base = Math.round((600 - i * 50) * yf * ff);
+      const base = Math.round((600 - i * 50) * sf * ff);
       const maba = Math.round(base * 0.22);
       const total = base;
       const krsOk = Math.round(total * 0.82);
@@ -54,7 +67,7 @@ export default function PelaporanCP1() {
     const totalAktif = rows.reduce((a, b) => a + b.aktif, 0);
 
     return { rows, totalMhs, totalKrsOk, totalKrsBelum, totalAktif };
-  }, [tahun, fakultas]);
+  }, [semester, fakultas]);
 
   return (
     <div className="u-stack">
@@ -65,8 +78,8 @@ export default function PelaporanCP1() {
           <div className="u-text-muted u-text-sm">Registrasi, KRS, dan aktivitas kuliah mahasiswa</div>
         </div>
         <div className="u-filters">
-          <label>Tahun <select className="u-select" value={tahun} onChange={e => setTahun(e.target.value)}>
-            <option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option>
+          <label>Semester <select className="u-select" value={semester} onChange={e => setSemester(e.target.value)}>
+            {SEMESTERS.slice().reverse().map(s => <option key={s} value={s}>{s}</option>)}
           </select></label>
           <label>Fakultas <select className="u-select" value={fakultas} onChange={e => setFakultas(e.target.value)}>
             <option value="Semua">Semua</option>
@@ -85,7 +98,7 @@ export default function PelaporanCP1() {
 
       {/* Table */}
       <div className="u-card" style={{ overflow: "hidden", padding: 0 }}>
-        <div className="lulusan-table-title">Tabel Ringkas CP1 — Per Program Studi</div>
+        <div className="lulusan-table-title">Tabel Ringkas CP1 — Per Program Studi (Semester {semester})</div>
         <div style={{ padding: 14, overflowX: "auto" }}>
           <table className="u-table" style={{ minWidth: 1000 }}>
             <thead>

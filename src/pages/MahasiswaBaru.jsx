@@ -7,6 +7,22 @@ import {
 const fmt = (n) => { try { return Number(n).toLocaleString("id-ID"); } catch { return n; } };
 const COLORS = ["#1e5aa8","#22c55e","#f59e0b","#8b5cf6","#ef4444","#14b8a6"];
 
+/* Semester options */
+const SEMESTERS = [];
+for (let y = 2021; y <= 2025; y++) {
+  SEMESTERS.push(`${y}-1`);
+  SEMESTERS.push(`${y}-2`);
+}
+
+const JENJANG_LIST = ["Semua", "S1", "S2", "S3", "D3", "Profesi"];
+const JENJANG_WEIGHTS = { Semua: 1, S1: 0.78, S2: 0.10, S3: 0.02, D3: 0.04, Profesi: 0.06 };
+
+function semesterFactor(sem) {
+  const [y, s] = sem.split("-").map(Number);
+  const idx = (y - 2021) * 2 + (s - 1);
+  return 0.90 + idx * 0.02;
+}
+
 function ChartCard({ title, right, children }) {
   return (
     <div className="u-card">
@@ -30,30 +46,32 @@ function Kpi({ label, value, hint, variant = "blue" }) {
 }
 
 export default function MahasiswaBaru() {
-  const [tahun, setTahun] = useState("2025");
+  const [semester, setSemester] = useState("2025-2");
   const [jalur, setJalur] = useState("Semua");
   const [fakultas, setFakultas] = useState("Semua");
+  const [jenjang, setJenjang] = useState("Semua");
   const [tabMandiri, setTabMandiri] = useState("Reguler");
 
   const vm = useMemo(() => {
-    const yf = tahun === "2025" ? 1.06 : tahun === "2024" ? 1 : 0.9;
+    const sf = semesterFactor(semester);
     const FAC_W = { Semua:1, Hukum:0.12, Teknik:0.16, FKIP:0.22, FEB:0.15, FISIP:0.10, Kedokteran:0.06, Pertanian:0.10, Perikanan:0.09 };
     const ff = FAC_W[fakultas] ?? 1;
+    const jf = JENJANG_WEIGHTS[jenjang] ?? 1;
 
-    let jf = 1;
-    if (jalur === "SNBP") jf = 0.34;
-    else if (jalur === "SNBT") jf = 0.41;
-    else if (jalur === "Mandiri") jf = 0.25;
+    let jlf = 1;
+    if (jalur === "SNBP") jlf = 0.34;
+    else if (jalur === "SNBT") jlf = 0.41;
+    else if (jalur === "Mandiri") jlf = 0.25;
 
-    const total = Math.max(1, Math.round(5200 * yf * jf * ff));
+    const total = Math.max(1, Math.round(5200 * sf * jlf * ff * jf));
     const dayaTampung = Math.round(total * 1.15);
     const minat = Math.round(total * 2.8);
     const registrasi = Math.round(total * 0.9);
     const belum = Math.max(0, total - registrasi);
 
-    const snbp = Math.round(5200 * yf * ff * 0.34);
-    const snbt = Math.round(5200 * yf * ff * 0.41);
-    const mandiriAll = Math.max(0, Math.round(5200 * yf * ff) - snbp - snbt);
+    const snbp = Math.round(5200 * sf * ff * jf * 0.34);
+    const snbt = Math.round(5200 * sf * ff * jf * 0.41);
+    const mandiriAll = Math.max(0, Math.round(5200 * sf * ff * jf) - snbp - snbt);
 
     const mandiriReg = Math.round(mandiriAll * 0.40);
     const mandiriRpl = Math.round(mandiriAll * 0.20);
@@ -73,14 +91,32 @@ export default function MahasiswaBaru() {
       Afirmasi: { label: "Mandiri Afirmasi", value: mandiriAfirmasi },
     };
 
-    const topProdi = [
-      ["Teknik Informatika", 520], ["Manajemen", 460], ["Hukum", 420],
-      ["Kedokteran", 380], ["Ilmu Komunikasi", 340], ["Akuntansi", 310],
-      ["Teknik Sipil", 280], ["Pendidikan Matematika", 260],
-    ].map(([prodi, base]) => ({
-      name: prodi,
-      value: Math.max(15, Math.round(base * yf * jf * ff)),
-    })).sort((a, b) => b.value - a.value);
+    /* Rasio Minat / Daya Tampung per Prodi */
+    const rasioProdi = [
+      { prodi: "Teknik Informatika", dayaTampung: 100, peminat: 520 },
+      { prodi: "Manajemen",          dayaTampung: 120, peminat: 460 },
+      { prodi: "Hukum",              dayaTampung: 80,  peminat: 420 },
+      { prodi: "Kedokteran",         dayaTampung: 50,  peminat: 380 },
+      { prodi: "Ilmu Komunikasi",    dayaTampung: 90,  peminat: 340 },
+      { prodi: "Akuntansi",          dayaTampung: 100, peminat: 310 },
+      { prodi: "Teknik Sipil",       dayaTampung: 80,  peminat: 280 },
+      { prodi: "Pend. Matematika",   dayaTampung: 70,  peminat: 260 },
+    ].map(r => {
+      const pAdj = Math.round(r.peminat * sf * jlf * ff);
+      const dAdj = Math.round(r.dayaTampung * sf * ff);
+      return {
+        ...r,
+        peminat: pAdj,
+        dayaTampung: dAdj,
+        rasio: dAdj > 0 ? Number((pAdj / dAdj).toFixed(2)) : 0,
+      };
+    }).sort((a, b) => b.rasio - a.rasio);
+
+    /* Top Prodi berdasarkan rasio minat (bukan jumlah absolut) */
+    const topProdi = rasioProdi.map(r => ({
+      name: r.prodi,
+      value: r.rasio,
+    }));
 
     const asal = [
       { name: "Maluku", value: Math.round(total * 0.58) },
@@ -90,8 +126,8 @@ export default function MahasiswaBaru() {
       { name: "Lainnya", value: Math.round(total * 0.08) },
     ];
 
-    return { total, dayaTampung, minat, registrasi, belum, jalurDonut, mandiriTab, topProdi, asal, mandiriAll, snbp, snbt };
-  }, [tahun, jalur, fakultas]);
+    return { total, dayaTampung, minat, registrasi, belum, jalurDonut, mandiriTab, topProdi, asal, mandiriAll, snbp, snbt, rasioProdi };
+  }, [semester, jalur, fakultas, jenjang]);
 
   const activeTab = vm.mandiriTab[tabMandiri];
 
@@ -104,8 +140,8 @@ export default function MahasiswaBaru() {
           <div className="u-text-muted u-text-sm">SNBP • SNBT • Mandiri (Reguler, RPL, Prestasi, Afirmasi)</div>
         </div>
         <div className="u-filters">
-          <label>Tahun <select className="u-select" value={tahun} onChange={e => setTahun(e.target.value)}>
-            <option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option>
+          <label>Semester <select className="u-select" value={semester} onChange={e => setSemester(e.target.value)}>
+            {SEMESTERS.slice().reverse().map(s => <option key={s} value={s}>{s}</option>)}
           </select></label>
           <label>Jalur <select className="u-select" value={jalur} onChange={e => setJalur(e.target.value)}>
             <option value="Semua">Semua</option><option value="SNBP">SNBP</option><option value="SNBT">SNBT</option><option value="Mandiri">Mandiri</option>
@@ -115,12 +151,15 @@ export default function MahasiswaBaru() {
             <option value="Hukum">Hukum</option><option value="Teknik">Teknik</option><option value="FKIP">FKIP</option>
             <option value="FEB">FEB</option><option value="FISIP">FISIP</option><option value="Kedokteran">Kedokteran</option>
           </select></label>
+          <label>Jenjang <select className="u-select" value={jenjang} onChange={e => setJenjang(e.target.value)}>
+            {JENJANG_LIST.map(j => <option key={j} value={j}>{j}</option>)}
+          </select></label>
         </div>
       </div>
 
       {/* KPI */}
       <div className="u-grid-4">
-        <Kpi label="Total Mahasiswa Baru" value={fmt(vm.total)} hint={`Tahun ${tahun} • ${jalur}`} variant="blue" />
+        <Kpi label="Total Mahasiswa Baru" value={fmt(vm.total)} hint={`Semester ${semester} • ${jalur}`} variant="blue" />
         <Kpi label="Daya Tampung" value={fmt(vm.dayaTampung)} hint="Kapasitas tersedia" variant="indigo" />
         <Kpi label="Peminat" value={fmt(vm.minat)} hint="Total pendaftar" variant="sky" />
         <Kpi label="Sudah Registrasi" value={fmt(vm.registrasi)} hint={`${Math.round(vm.registrasi / Math.max(1, vm.total) * 100)}% dari total`} variant="green" />
@@ -130,7 +169,7 @@ export default function MahasiswaBaru() {
       <div className="u-layout-lr">
         <div className="u-stack">
           {/* Donut Jalur */}
-          <ChartCard title="Komposisi Jalur Penerimaan" right={<span className="u-badge u-badge--blue">Tahun {tahun}</span>}>
+          <ChartCard title="Komposisi Jalur Penerimaan" right={<span className="u-badge u-badge--blue">Semester {semester}</span>}>
             <div style={{ height: 300 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -162,7 +201,7 @@ export default function MahasiswaBaru() {
               ))}
             </div>
             <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-              <Kpi label={activeTab.label} value={fmt(activeTab.value)} hint={`Tahun ${tahun}`} variant="purple" />
+              <Kpi label={activeTab.label} value={fmt(activeTab.value)} hint={`Semester ${semester}`} variant="purple" />
               <div className="u-card" style={{ padding: 16 }}>
                 <div style={{ fontSize: 12, color: "#64748b", fontWeight: 700, marginBottom: 6 }}>Total Mandiri (Semua)</div>
                 <div style={{ fontSize: 28, fontWeight: 900 }}>{fmt(vm.mandiriAll)}</div>
@@ -173,16 +212,47 @@ export default function MahasiswaBaru() {
             </div>
           </ChartCard>
 
-          {/* Top Prodi */}
-          <ChartCard title="Top Program Studi (Mahasiswa Baru)">
+          {/* Rasio Minat / Daya Tampung */}
+          <ChartCard title="Rasio Minat / Daya Tampung Per Program Studi" right={<span className="u-badge u-badge--purple">Rasio Tinggi = Persaingan Tinggi</span>}>
+            <table className="u-table">
+              <thead>
+                <tr>
+                  <th>Program Studi</th>
+                  <th>Daya Tampung</th>
+                  <th>Peminat</th>
+                  <th>Rasio Minat / Daya Tampung</th>
+                </tr>
+              </thead>
+              <tbody>
+                {vm.rasioProdi.map(r => (
+                  <tr key={r.prodi}>
+                    <td style={{ fontWeight: 800 }}>{r.prodi}</td>
+                    <td>{fmt(r.dayaTampung)}</td>
+                    <td>{fmt(r.peminat)}</td>
+                    <td>
+                      <span style={{
+                        fontWeight: 900,
+                        color: r.rasio >= 5 ? "#ef4444" : r.rasio >= 3 ? "#f59e0b" : "#22c55e",
+                      }}>
+                        {r.rasio.toFixed(1)}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </ChartCard>
+
+          {/* Top Prodi berdasarkan Rasio */}
+          <ChartCard title="Top Program Studi (Berdasarkan Rasio Minat)">
             <div style={{ height: 320 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={vm.topProdi} layout="vertical" barCategoryGap={10} margin={{ left: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" />
                   <YAxis type="category" dataKey="name" width={140} tick={{ fontSize: 11 }} />
-                  <Tooltip formatter={v => fmt(v)} />
-                  <Bar dataKey="value" fill="#1e5aa8" radius={[0,6,6,0]} />
+                  <Tooltip formatter={v => `${v.toFixed(1)}x`} />
+                  <Bar dataKey="value" name="Rasio Minat" fill="#8b5cf6" radius={[0,6,6,0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -226,8 +296,9 @@ export default function MahasiswaBaru() {
           <div className="u-card" style={{ padding: 16 }}>
             <div style={{ fontWeight: 800, fontSize: 14, marginBottom: 10 }}>Catatan</div>
             <ul style={{ margin: 0, paddingLeft: 18, color: "#64748b", display: "grid", gap: 6, fontSize: 12 }}>
-              <li>Semua data berubah sesuai filter Tahun, Jalur, dan Fakultas.</li>
+              <li>Semua data berubah sesuai filter Semester, Jalur, Fakultas, dan Jenjang.</li>
               <li>Tab Mandiri menampilkan detail RPL/Prestasi/Afirmasi.</li>
+              <li>Rasio minat menunjukkan tingkat persaingan relatif.</li>
               <li>Data dummy — nanti disambungkan ke API SIAKAD.</li>
             </ul>
           </div>
