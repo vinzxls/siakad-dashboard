@@ -126,7 +126,21 @@ export default function MahasiswaBaru() {
       { name: "Lainnya", value: Math.round(total * 0.08) },
     ];
 
-    return { total, dayaTampung, minat, registrasi, belum, jalurDonut, mandiriTab, topProdi, asal, mandiriAll, snbp, snbt, rasioProdi };
+    /* Sebaran Asal Sekolah (Kota Ambon) */
+    const asalSekolah = [
+      { name: "SMAN 1 Ambon",       value: Math.round(total * 0.14), color: "#1e5aa8" },
+      { name: "SMAN 2 Ambon",       value: Math.round(total * 0.11), color: "#3b82f6" },
+      { name: "SMAN 3 Ambon",       value: Math.round(total * 0.09), color: "#0ea5e9" },
+      { name: "SMAN 5 Ambon",       value: Math.round(total * 0.07), color: "#6366f1" },
+      { name: "SMKN 1 Ambon",       value: Math.round(total * 0.08), color: "#22c55e" },
+      { name: "SMKN 2 Ambon",       value: Math.round(total * 0.06), color: "#16a34a" },
+      { name: "SMA Xaverius Ambon", value: Math.round(total * 0.07), color: "#f59e0b" },
+      { name: "MAN Ambon",          value: Math.round(total * 0.05), color: "#8b5cf6" },
+      { name: "SMA Kristen Ambon",  value: Math.round(total * 0.04), color: "#14b8a6" },
+      { name: "Sekolah Lainnya",    value: Math.round(total * 0.29), color: "#94a3b8" },
+    ];
+
+    return { total, dayaTampung, minat, registrasi, belum, jalurDonut, mandiriTab, topProdi, asal, mandiriAll, snbp, snbt, rasioProdi, asalSekolah };
   }, [semester, jalur, fakultas, jenjang]);
 
   const activeTab = vm.mandiriTab[tabMandiri];
@@ -274,13 +288,28 @@ export default function MahasiswaBaru() {
               </div>
             </ChartCard>
 
-            <ChartCard title="Tren Wilayah Asal">
-              <div className="u-map-placeholder">
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 36, marginBottom: 8 }}>🗺️</div>
-                  <div>Peta Sebaran Wilayah Asal</div>
-                  <div style={{ fontSize: 11, marginTop: 4 }}>Akan diimplementasi</div>
-                </div>
+            <ChartCard title="Sebaran Berdasarkan Asal Sekolah">
+              <div style={{ height: 280 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={vm.asalSekolah} barCategoryGap={14}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                    <YAxis />
+                    <Tooltip formatter={v => fmt(v)} />
+                    <Bar dataKey="value" name="Jumlah" radius={[6,6,0,0]}>
+                      {vm.asalSekolah.map((d, i) => <Cell key={i} fill={d.color} />)}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginTop: 10 }}>
+                {vm.asalSekolah.map(s => (
+                  <div key={s.name} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: 3, background: s.color }} />
+                    <span style={{ fontWeight: 800 }}>{s.name}: {fmt(s.value)}</span>
+                    <span style={{ color: "#64748b" }}>({Math.round(s.value / Math.max(1, vm.total) * 100)}%)</span>
+                  </div>
+                ))}
               </div>
             </ChartCard>
           </div>
