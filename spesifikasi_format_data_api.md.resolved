@@ -33,7 +33,7 @@ Semua endpoint menerima parameter filter berikut:
     "snbp": 4500,
     "snbt": 5400,
     "mandiri": 3600
-  },
+  }, 
   "mahasiswaBaru": {
     "total": 5600,
     "registrasi": 5050,
