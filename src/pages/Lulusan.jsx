@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { getProdiList, getProdiWeight } from "../data/fakultasProdi";
 import {
   ResponsiveContainer,
   LineChart,
@@ -179,6 +180,11 @@ function CustomTooltip({ active, payload, label }) {
 export default function Lulusan() {
   const [periodeAkhir, setPeriodeAkhir] = useState(2025);
   const [fakultas, setFakultas] = useState("Semua");
+  const [prodi, setProdi] = useState("Semua");
+
+  useEffect(() => { setProdi("Semua"); }, [fakultas]);
+
+  const prodiList = getProdiList(fakultas);
 
 const vm = useMemo(() => {
   const years = [periodeAkhir - 5, periodeAkhir - 4, periodeAkhir - 3, periodeAkhir - 2, periodeAkhir - 1, periodeAkhir];
@@ -224,6 +230,7 @@ const vm = useMemo(() => {
 
   // Untuk scaling total (kalau Semua = 1, kalau fakultas = proporsi)
   const scaleTotal = fakultas === "Semua" ? 1 : facFactor;
+  const prodiFactor = getProdiWeight(prodi);
 
   // IPK bias per fakultas (biar terasa beda)
   const ipkBias =
@@ -253,7 +260,7 @@ const vm = useMemo(() => {
 
   const lulusanByYear = years.map((y) => {
     const baseTotal = lulusanByYearRaw[y] ?? 0;
-    const total = Math.round(baseTotal * scaleTotal);
+    const total = Math.round(baseTotal * scaleTotal * prodiFactor);
 
     const ipkBase = ipkByYearRaw[y] ?? 0;
     const ipk = ipkBase ? Number((ipkBase + ipkBias).toFixed(2)) : 0;
@@ -307,12 +314,12 @@ const vm = useMemo(() => {
   const perFakultas = fakultasList.map((f, i) => {
     const base = Math.max(120, Math.round(9276 / (i + 1)));
     // kalau Semua: tampil full; kalau pilih fakultas: kecilkan agar “filter terasa”
-    const scaled = Math.round(base * (fakultas === "Semua" ? 1 : scaleTotal));
+    const scaled = Math.round(base * (fakultas === "Semua" ? 1 : scaleTotal) * prodiFactor);
     return { fakultas: f, total: scaled };
   });
 
   return { years, lulusanByYear, totalTercatat, total5Tahun, ipkRata2, cumlaude5, perFakultas };
-}, [periodeAkhir, fakultas]);
+}, [periodeAkhir, fakultas, prodi]);
 
 
   return (
@@ -387,6 +394,26 @@ const vm = useMemo(() => {
                 <option value="Ekonomi">Ekonomi</option>
                 <option value="FISIP">FISIP</option>
                 <option value="Kedokteran">Kedokteran</option>
+              </select>
+            </label>
+
+            <label style={{ fontSize: 12, color: "#6b7280", fontWeight: 900 }}>
+              Program Studi
+              <select
+                value={prodi}
+                onChange={(e) => setProdi(e.target.value)}
+                style={{
+                  marginLeft: 10,
+                  padding: "10px 12px",
+                  borderRadius: 12,
+                  border: "1px solid #e5e7eb",
+                  background: "#fff",
+                  fontSize: 14,
+                  fontWeight: 900,
+                }}
+              >
+                <option value="Semua">Semua Prodi</option>
+                {prodiList.map(p => <option key={p} value={p}>{p}</option>)}
               </select>
             </label>
           </div>

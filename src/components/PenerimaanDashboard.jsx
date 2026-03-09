@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { getProdiList, getProdiWeight } from "../data/fakultasProdi";
 import {
   ResponsiveContainer,
   PieChart,
@@ -369,6 +370,11 @@ function Lines({ data, xKey, yKey }) {
 export default function PenerimaanDashboard({ jalurKey = "snbp", title = "SNBP" }) {
   const [tahun, setTahun] = useState("2024");
   const [fakultas, setFakultas] = useState("Semua");
+  const [prodi, setProdi] = useState("Semua");
+
+  useEffect(() => { setProdi("Semua"); }, [fakultas]);
+
+  const prodiOptionList = getProdiList(fakultas);
 
   const data = useMemo(() => {
     const profile = JALUR_PROFILE[jalurKey] ?? JALUR_PROFILE.snbp;
@@ -385,9 +391,10 @@ export default function PenerimaanDashboard({ jalurKey = "snbp", title = "SNBP" 
       Kedokteran: 0.08,
     };
     const facFactor = FAC_WEIGHT[fakultas] ?? 0.2;
+    const prodiFactor = getProdiWeight(prodi);
 
     // KPI utama (bener-bener beda per jalur)
-    const pendaftar = Math.round(profile.basePendaftar * baseYear * facFactor);
+    const pendaftar = Math.round(profile.basePendaftar * baseYear * facFactor * prodiFactor);
     const diterima = Math.round(pendaftar * profile.accRate);
     const registrasi = Math.round(diterima * profile.regRate);
     const tidakRegistrasi = Math.max(0, diterima - registrasi);
@@ -410,7 +417,7 @@ export default function PenerimaanDashboard({ jalurKey = "snbp", title = "SNBP" 
     const years = ["2021", "2022", "2023", "2024", "2025"];
     const trend = years.map((y, i) => {
       const boost = profile.trendBoost[i] ?? 1;
-      const p = Math.round(profile.basePendaftar * boost * (y === "2025" ? 1.05 : y === "2024" ? 1.02 : y === "2023" ? 1.0 : y === "2022" ? 0.96 : 0.92) * facFactor);
+      const p = Math.round(profile.basePendaftar * boost * (y === "2025" ? 1.05 : y === "2024" ? 1.02 : y === "2023" ? 1.0 : y === "2022" ? 0.96 : 0.92) * facFactor * prodiFactor);
       const d = Math.round(p * profile.accRate);
       const r = Math.round(d * profile.regRate);
       return { year: y, pendaftar: p, diterima: d, registrasi: r };
@@ -420,7 +427,7 @@ export default function PenerimaanDashboard({ jalurKey = "snbp", title = "SNBP" 
     const topProdi = profile.topProdiBase
       .map(([prodi, base]) => ({
         name: prodi,
-        value: Math.max(10, Math.round(base * baseYear * (0.9 + profile.accRate) * facFactor)),
+        value: Math.max(10, Math.round(base * baseYear * (0.9 + profile.accRate) * facFactor * prodiFactor)),
       }))
       .sort((a, b) => b.value - a.value);
 
@@ -428,7 +435,7 @@ export default function PenerimaanDashboard({ jalurKey = "snbp", title = "SNBP" 
     const asalSekolah = profile.sekolahBase
       .map(([sekolah, base]) => ({
         name: sekolah,
-        value: Math.max(5, Math.round(base * baseYear * (0.9 + profile.regRate) * facFactor)),
+        value: Math.max(5, Math.round(base * baseYear * (0.9 + profile.regRate) * facFactor * prodiFactor)),
       }))
       .sort((a, b) => b.value - a.value);
 
@@ -452,7 +459,7 @@ export default function PenerimaanDashboard({ jalurKey = "snbp", title = "SNBP" 
       asalSekolah,
       _profileLabel: profile.label,
     };
-  }, [tahun, fakultas, jalurKey]);
+  }, [tahun, fakultas, prodi, jalurKey]);
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
@@ -517,6 +524,26 @@ export default function PenerimaanDashboard({ jalurKey = "snbp", title = "SNBP" 
               <option value="Ekonomi">Ekonomi</option>
               <option value="FISIP">FISIP</option>
               <option value="Kedokteran">Kedokteran</option>
+            </select>
+          </label>
+
+          <label style={{ fontSize: 13, color: "#6b7280", fontWeight: 800 }}>
+            Prodi
+            <select
+              value={prodi}
+              onChange={(e) => setProdi(e.target.value)}
+              style={{
+                marginLeft: 10,
+                padding: "10px 12px",
+                borderRadius: 12,
+                border: "1px solid #e5e7eb",
+                background: "#fff",
+                fontSize: 15,
+                fontWeight: 800,
+              }}
+            >
+              <option value="Semua">Semua</option>
+              {prodiOptionList.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
           </label>
         </div>

@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { getProdiList, getProdiWeight } from "../data/fakultasProdi";
 import {
   ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -49,13 +50,19 @@ export default function MahasiswaBaru() {
   const [semester, setSemester] = useState("2025-2");
   const [jalur, setJalur] = useState("Semua");
   const [fakultas, setFakultas] = useState("Semua");
+  const [prodi, setProdi] = useState("Semua");
   const [jenjang, setJenjang] = useState("Semua");
   const [tabMandiri, setTabMandiri] = useState("Reguler");
 
+  // Reset prodi saat fakultas berubah
+  useEffect(() => { setProdi("Semua"); }, [fakultas]);
+
+  const prodiList = getProdiList(fakultas);
   const vm = useMemo(() => {
     const sf = semesterFactor(semester);
     const FAC_W = { Semua:1, Hukum:0.12, Teknik:0.16, FKIP:0.22, FEB:0.15, FISIP:0.10, Kedokteran:0.06, Pertanian:0.10, Perikanan:0.09 };
     const ff = FAC_W[fakultas] ?? 1;
+    const pf = getProdiWeight(prodi);
     const jf = JENJANG_WEIGHTS[jenjang] ?? 1;
 
     let jlf = 1;
@@ -63,15 +70,15 @@ export default function MahasiswaBaru() {
     else if (jalur === "SNBT") jlf = 0.41;
     else if (jalur === "Mandiri") jlf = 0.25;
 
-    const total = Math.max(1, Math.round(5200 * sf * jlf * ff * jf));
+    const total = Math.max(1, Math.round(5200 * sf * jlf * ff * pf * jf));
     const dayaTampung = Math.round(total * 1.15);
     const minat = Math.round(total * 2.8);
     const registrasi = Math.round(total * 0.9);
     const belum = Math.max(0, total - registrasi);
 
-    const snbp = Math.round(5200 * sf * ff * jf * 0.34);
-    const snbt = Math.round(5200 * sf * ff * jf * 0.41);
-    const mandiriAll = Math.max(0, Math.round(5200 * sf * ff * jf) - snbp - snbt);
+    const snbp = Math.round(5200 * sf * ff * pf * jf * 0.34);
+    const snbt = Math.round(5200 * sf * ff * pf * jf * 0.41);
+    const mandiriAll = Math.max(0, Math.round(5200 * sf * ff * pf * jf) - snbp - snbt);
 
     const mandiriReg = Math.round(mandiriAll * 0.40);
     const mandiriRpl = Math.round(mandiriAll * 0.20);
@@ -141,7 +148,7 @@ export default function MahasiswaBaru() {
     ];
 
     return { total, dayaTampung, minat, registrasi, belum, jalurDonut, mandiriTab, topProdi, asal, mandiriAll, snbp, snbt, rasioProdi, asalSekolah };
-  }, [semester, jalur, fakultas, jenjang]);
+  }, [semester, jalur, fakultas, prodi, jenjang]);
 
   const activeTab = vm.mandiriTab[tabMandiri];
 
@@ -164,6 +171,10 @@ export default function MahasiswaBaru() {
             <option value="Semua">Semua</option>
             <option value="Hukum">Hukum</option><option value="Teknik">Teknik</option><option value="FKIP">FKIP</option>
             <option value="FEB">FEB</option><option value="FISIP">FISIP</option><option value="Kedokteran">Kedokteran</option>
+          </select></label>
+          <label>Prodi <select className="u-select" value={prodi} onChange={e => setProdi(e.target.value)}>
+            <option value="Semua">Semua</option>
+            {prodiList.map(p => <option key={p} value={p}>{p}</option>)}
           </select></label>
           <label>Jenjang <select className="u-select" value={jenjang} onChange={e => setJenjang(e.target.value)}>
             {JENJANG_LIST.map(j => <option key={j} value={j}>{j}</option>)}

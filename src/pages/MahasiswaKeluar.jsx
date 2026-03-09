@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { getProdiList, getProdiWeight } from "../data/fakultasProdi";
 import {
   ResponsiveContainer, LineChart, Line, BarChart, Bar, AreaChart, Area,
   CartesianGrid, XAxis, YAxis, Tooltip, Legend,
@@ -47,12 +48,18 @@ function Kpi({ label, value, hint, variant = "blue" }) {
 export default function MahasiswaKeluar() {
   const [semester, setSemester] = useState("2025-2");
   const [fakultas, setFakultas] = useState("Semua");
+  const [prodi, setProdi] = useState("Semua");
   const [statusKeluar, setStatusKeluar] = useState("Semua");
   const [section, setSection] = useState("lulusan");
+
+  useEffect(() => { setProdi("Semua"); }, [fakultas]);
+
+  const prodiList = getProdiList(fakultas);
 
   const vm = useMemo(() => {
     const facW = { Semua:1, Hukum:0.22, Teknik:0.28, Ekonomi:0.24, FISIP:0.18, Kedokteran:0.08 };
     const ff = facW[fakultas] ?? 1;
+    const pf = getProdiWeight(prodi);
     const ipkBias = fakultas === "Kedokteran" ? 0.06 : fakultas === "Teknik" ? -0.04 : 0;
     const lamaBias = fakultas === "Teknik" ? 0.20 : fakultas === "Kedokteran" ? 0.15 : 0;
     const cumlaudeRate = fakultas === "Kedokteran" ? 0.10 : 0.07;
@@ -75,7 +82,7 @@ export default function MahasiswaKeluar() {
     };
 
     const lulusanBySemester = SEMESTERS.map(sem => {
-      const total = Math.round((lulusanRaw[sem] ?? 0) * ff);
+      const total = Math.round((lulusanRaw[sem] ?? 0) * ff * pf);
       const ipk = (ipkRaw[sem] ?? 0) ? Number(((ipkRaw[sem] ?? 0) + ipkBias).toFixed(2)) : 0;
       const lama = (lamaRaw[sem] ?? 0) ? Number(((lamaRaw[sem] ?? 0) + lamaBias).toFixed(1)) : 0;
       const tepat = Math.round(tepatRate * 100);
@@ -90,7 +97,7 @@ export default function MahasiswaKeluar() {
     const cumlaude5 = lulusanBySemester.reduce((a, b) => a + b.cumlaude, 0);
 
     const perFakultas = ["FKIP","FEB","Hukum","FISIP","Teknik","Kedokteran","Pertanian","Perikanan"]
-      .map((f, i) => ({ fakultas: f, total: Math.round(Math.max(120, 4500 / (i + 1)) * ff) }));
+      .map((f, i) => ({ fakultas: f, total: Math.round(Math.max(120, 4500 / (i + 1)) * ff * pf) }));
 
     const ipkDist = [
       { range: "< 2.5", value: Math.round(total5 * 0.05) },
@@ -101,7 +108,7 @@ export default function MahasiswaKeluar() {
 
     const mutasiExternal = SEMESTERS.filter(s => s.endsWith("-1")).map((sem, i) => {
       const y = sem.split("-")[0];
-      return { tahun: y, keluar: Math.round((85 + i * 3) * ff) };
+      return { tahun: y, keluar: Math.round((85 + i * 3) * ff * pf) };
     });
 
     const statusData = [
@@ -116,7 +123,7 @@ export default function MahasiswaKeluar() {
     }));
 
     return { lulusanBySemester, totalTercatat, total5, ipkAvg, cumlaude5, perFakultas, ipkDist, mutasiExternal, statusData };
-  }, [semester, fakultas, statusKeluar]);
+  }, [semester, fakultas, prodi, statusKeluar]);
 
   return (
     <div className="u-stack">
@@ -137,6 +144,10 @@ export default function MahasiswaKeluar() {
             <label>Fakultas <select className="u-select" value={fakultas} onChange={e => setFakultas(e.target.value)}>
               <option value="Semua">Semua</option>
               {["Hukum","Teknik","Ekonomi","FISIP","Kedokteran"].map(f => <option key={f} value={f}>{f}</option>)}
+            </select></label>
+            <label>Prodi <select className="u-select" value={prodi} onChange={e => setProdi(e.target.value)}>
+              <option value="Semua">Semua</option>
+              {prodiList.map(p => <option key={p} value={p}>{p}</option>)}
             </select></label>
           </div>
           <div className="u-tabs" style={{ border: "none" }}>

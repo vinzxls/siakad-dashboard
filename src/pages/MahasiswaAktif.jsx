@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { getProdiList, getProdiWeight } from "../data/fakultasProdi";
 import {
   ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line,
@@ -69,36 +70,43 @@ function semesterFactor(sem) {
 export default function MahasiswaAktif() {
   const [semester, setSemester] = useState("2025-2");
   const [fakultas, setFakultas] = useState("Semua");
+  const [prodi, setProdi] = useState("Semua");
   const [jenjang, setJenjang] = useState("Semua");
+
+  // Reset prodi saat fakultas berubah
+  useEffect(() => { setProdi("Semua"); }, [fakultas]);
+
+  const prodiList = getProdiList(fakultas);
 
   const vm = useMemo(() => {
     const sf = semesterFactor(semester);
     const FAC_W = { Semua:1, Hukum:0.12, Teknik:0.16, FKIP:0.22, FEB:0.15, FISIP:0.10, Kedokteran:0.06, Pertanian:0.10, Perikanan:0.09 };
     const ff = FAC_W[fakultas] ?? 1;
+    const pf = getProdiWeight(prodi);
     const jf = JENJANG_WEIGHTS[jenjang] ?? 1;
 
-    const aktif    = Math.round(26000 * sf * ff * jf);
+    const aktif    = Math.round(26000 * sf * ff * pf * jf);
     const nonaktif = Math.round(aktif * 0.08);
     const cuti     = Math.round(aktif * 0.03);
     const ipk      = (3.12 + (sf > 1.04 ? 0.04 : sf < 0.94 ? -0.03 : 0)).toFixed(2);
 
     const byJenjang = [
-      { name: "S1", value: Math.round(26000 * sf * ff * 0.78) },
-      { name: "S2", value: Math.round(26000 * sf * ff * 0.10) },
-      { name: "S3", value: Math.round(26000 * sf * ff * 0.02) },
-      { name: "Profesi", value: Math.round(26000 * sf * ff * 0.06) },
-      { name: "D3", value: Math.round(26000 * sf * ff * 0.04) },
+      { name: "S1", value: Math.round(26000 * sf * ff * pf * 0.78) },
+      { name: "S2", value: Math.round(26000 * sf * ff * pf * 0.10) },
+      { name: "S3", value: Math.round(26000 * sf * ff * pf * 0.02) },
+      { name: "Profesi", value: Math.round(26000 * sf * ff * pf * 0.06) },
+      { name: "D3", value: Math.round(26000 * sf * ff * pf * 0.04) },
     ];
 
     const barFakultas = [
-      { name: "FKIP",    value: Math.round(5600 * sf * jf) },
-      { name: "FEB",     value: Math.round(3900 * sf * jf) },
-      { name: "Teknik",  value: Math.round(4200 * sf * jf) },
-      { name: "Hukum",   value: Math.round(3100 * sf * jf) },
-      { name: "FISIP",   value: Math.round(2600 * sf * jf) },
-      { name: "Kedokteran", value: Math.round(1500 * sf * jf) },
-      { name: "Pertanian",  value: Math.round(2700 * sf * jf) },
-      { name: "Perikanan",  value: Math.round(2400 * sf * jf) },
+      { name: "FKIP",    value: Math.round(5600 * sf * pf * jf) },
+      { name: "FEB",     value: Math.round(3900 * sf * pf * jf) },
+      { name: "Teknik",  value: Math.round(4200 * sf * pf * jf) },
+      { name: "Hukum",   value: Math.round(3100 * sf * pf * jf) },
+      { name: "FISIP",   value: Math.round(2600 * sf * pf * jf) },
+      { name: "Kedokteran", value: Math.round(1500 * sf * pf * jf) },
+      { name: "Pertanian",  value: Math.round(2700 * sf * pf * jf) },
+      { name: "Perikanan",  value: Math.round(2400 * sf * pf * jf) },
     ];
 
     const statusSemester = [
@@ -112,7 +120,7 @@ export default function MahasiswaAktif() {
     // Tren per semester (2021-1 s/d 2025-2)
     const trenAktif = SEMESTERS.map(sem => {
       const f = semesterFactor(sem);
-      return { semester: sem, value: Math.round(26000 * f * ff * jf) };
+      return { semester: sem, value: Math.round(26000 * f * ff * pf * jf) };
     });
 
     const ipkBar = [
@@ -145,7 +153,7 @@ export default function MahasiswaAktif() {
     ];
 
     return { aktif, nonaktif, cuti, ipk, byJenjang, barFakultas, statusSemester, trenAktif, ipkBar, transfer, ipkSks, jenjangFlat };
-  }, [semester, fakultas, jenjang]);
+  }, [semester, fakultas, prodi, jenjang]);
 
   return (
     <div className="u-stack">
@@ -162,6 +170,10 @@ export default function MahasiswaAktif() {
           <label>Fakultas <select className="u-select" value={fakultas} onChange={e => setFakultas(e.target.value)}>
             <option value="Semua">Semua</option>
             {Object.keys(FAC_COLORS).map(f => <option key={f} value={f}>{f}</option>)}
+          </select></label>
+          <label>Prodi <select className="u-select" value={prodi} onChange={e => setProdi(e.target.value)}>
+            <option value="Semua">Semua</option>
+            {prodiList.map(p => <option key={p} value={p}>{p}</option>)}
           </select></label>
           <label>Jenjang <select className="u-select" value={jenjang} onChange={e => setJenjang(e.target.value)}>
             {JENJANG_LIST.map(j => <option key={j} value={j}>{j}</option>)}
