@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { useState } from "react";
-import { FiHome, FiUsers, FiUserCheck, FiFileText, FiChevronDown, FiChevronRight, FiLogOut } from "react-icons/fi";
+import { FiHome, FiUsers, FiUserCheck, FiFileText, FiChevronDown, FiChevronRight, FiLogOut, FiDatabase } from "react-icons/fi";
 import unpattiLogo from "../assets/unpatti-logo.png";
 
 export default function Sidebar() {
@@ -8,6 +8,7 @@ export default function Sidebar() {
   const [openMhs, setOpenMhs] = useState(pathname.includes("/mahasiswa-aktif") || pathname.includes("/mahasiswa-baru"));
   const [openKeluar, setOpenKeluar] = useState(pathname.includes("/mahasiswa-keluar"));
   const [openPelaporan, setOpenPelaporan] = useState(pathname.includes("/pelaporan"));
+  const [openPddikti, setOpenPddikti] = useState(pathname.includes("/pddikti"));
 
   const item = ({ isActive }) =>
     `u-menu__item${isActive ? " active" : ""}`;
@@ -89,6 +90,30 @@ export default function Sidebar() {
             </NavLink>
             <NavLink to="/akademik/pelaporan/checkpoint-2" className={item}>
               Checkpoint 2
+            </NavLink>
+          </div>
+        )}
+
+        {/* PDDIKTI */}
+        <button
+          type="button"
+          className="u-menu__toggle"
+          onClick={() => setOpenPddikti(v => !v)}
+        >
+          <span className="icon"><FiDatabase /></span>
+          PDDIKTI
+          <span className="caret">{openPddikti ? <FiChevronDown /> : <FiChevronRight />}</span>
+        </button>
+        {openPddikti && (
+          <div className="u-menu__sub">
+            <NavLink to="/akademik/pddikti/residu" className={item}>
+              Residu Data
+            </NavLink>
+            <NavLink to="/akademik/pddikti/perbandingan" className={item}>
+              Perbandingan Data
+            </NavLink>
+            <NavLink to="/akademik/pddikti/progres-fakultas" className={item}>
+              Progres Fakultas
             </NavLink>
           </div>
         )}

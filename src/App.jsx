@@ -12,6 +12,10 @@ import MahasiswaKeluar from "./pages/MahasiswaKeluar";
 import PelaporanCP1 from "./pages/pelaporanx/PelaporanMahasiswaTahun";
 import PelaporanCP2 from "./pages/pelaporanx/PelaporanMasaStudiIPK";
 
+import ResiduPddikti from "./pages/pddikti/ResiduPddikti";
+import PerbandinganData from "./pages/pddikti/PerbandinganData";
+import ProgresFakultas from "./pages/pddikti/ProgresFakultas";
+
 export default function App() {
   return (
     <Routes>
@@ -34,6 +38,13 @@ export default function App() {
           <Route index element={<Navigate to="checkpoint-1" replace />} />
           <Route path="checkpoint-1" element={<PelaporanCP1 />} />
           <Route path="checkpoint-2" element={<PelaporanCP2 />} />
+        </Route>
+
+        <Route path="pddikti">
+          <Route index element={<Navigate to="residu" replace />} />
+          <Route path="residu" element={<ResiduPddikti />} />
+          <Route path="perbandingan" element={<PerbandinganData />} />
+          <Route path="progres-fakultas" element={<ProgresFakultas />} />
         </Route>
 
         {/* Legacy redirects */}
