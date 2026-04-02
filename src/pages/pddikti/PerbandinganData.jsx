@@ -3,6 +3,7 @@ import {
   ResponsiveContainer, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from "recharts";
+import * as XLSX from "xlsx";
 import {
   generatePerbandingan,
   generateAnomaliData,
@@ -69,6 +70,22 @@ function downloadCSV(data, filename) {
   URL.revokeObjectURL(url);
 }
 
+/**
+ * Download anomaly data as real XLSX using SheetJS.
+ */
+function downloadXLSX(data, filename) {
+  if (!data.length) return;
+  const ws = XLSX.utils.json_to_sheet(data);
+  // Auto-fit column widths
+  const colWidths = Object.keys(data[0]).map(key => ({
+    wch: Math.max(key.length, ...data.map(r => String(r[key]).length)) + 2,
+  }));
+  ws["!cols"] = colWidths;
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Laporan Anomali");
+  XLSX.writeFile(wb, filename);
+}
+
 export default function PerbandinganData() {
   const [semester, setSemester] = useState("2025-2");
   const [fakultas, setFakultas] = useState("Semua");
@@ -84,8 +101,7 @@ export default function PerbandinganData() {
   }, [anomali, semester, fakultas]);
 
   const handleDownloadXLSX = useCallback(() => {
-    // XLSX requires a library; fallback to CSV with .xlsx-compatible format
-    downloadCSV(anomali, `laporan-anomali-${semester}-${fakultas}.csv`);
+    downloadXLSX(anomali, `laporan-anomali-${semester}-${fakultas}.xlsx`);
   }, [anomali, semester, fakultas]);
 
   return (
